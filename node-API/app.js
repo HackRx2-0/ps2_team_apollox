@@ -15,6 +15,8 @@ const initDb = require("./api/helpers/dbMongo").initDb;
 const auth = require("./api/helpers/auth");
 const handleError = require("./api/helpers/error").handleError;
 const swagger = fs.readFileSync("./api/swagger/swagger.yaml", "utf8");
+const { verifyToken, addChatToDatabase } = require("./api/helpers/socket");
+const db = require("./api/helpers/db");
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -29,10 +31,9 @@ app.get("/", (req, res) => {
   res.sendFile(`index.html`, { root: "./" });
 });
 
-function catchError(err, req, res, next) {
-  console.log(err.code);
-  handleError(err, res);
-  // exit from here, no need to go inside the handler
+function getCurrTime(isMongo) {
+  if (!isMongo) return moment().format("YYYY-MM-DD hh:mm:ss");
+  else return moment().toDate();
 }
 
 // SOCKET --------------------------------------------------------------------------------------------------------------------
@@ -61,8 +62,6 @@ io.use((socket, next) => {
       userSocketMap[userId] = socket.id;
       userRoomMap[userId] = roomname;
       socket.join(roomname);
-
-      // console.log({ userSocketMap, userRoomMap });
 
       //Add the roomId to the socket object
       socket.user = {
@@ -103,10 +102,7 @@ io.on("connection", (socket) => {
         if (result.length) {
           socket.join(`ROOM_${payload.group_id}`);
           cb({ status: "OK" });
-
           console.log("user in group");
-          const rooms = io.of("/").adapter.rooms;
-          console.log({ rooms });
         } else {
           cb({ status: "NOK" });
           console.log("user not in group");
@@ -116,19 +112,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("GRP_MSG", (payload, cb) => {
-    // const chat = {
-    //   messageUid: payload._id,
-    //   text: payload.text,
-    // };
+    console.log("group message");
     const chat = {
+      ...payload,
       from: socket.user.uid,
-      group_id: payload.group_id,
-      message: payload.message,
       createdAt: getCurrTime(true),
     };
-
     console.log(chat);
-    // addChatToDatabase(chat);
+    addChatToDatabase(chat);
     socket.to(`ROOM_${payload.group_id}`).emit("GRP_MSG", chat);
     cb({
       status: "OK",
@@ -144,6 +135,12 @@ io.on("connection", (socket) => {
 
 // SOCKET ------------------------------------------------------------------------------------------------------------------
 // END-----------------------------------------------------------------------------------------------------------------------
+
+function catchError(err, req, res, next) {
+  console.log(err.code);
+  handleError(err, res);
+  // exit from here, no need to go inside the handler
+}
 
 swaggerTools.initializeMiddleware(swaggerConfig, (middleware) => {
   // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
@@ -178,9 +175,12 @@ swaggerTools.initializeMiddleware(swaggerConfig, (middleware) => {
   httpServer.listen(port, (error) => {
     if (error) throw error;
     console.log("Server Running on port " + port);
-    // initDb((err) => {
-    //   if (err) throw err;
-    // });
+    initDb((err) => {
+      if (err) throw err;
+      else {
+        console.log("Mongo Connected");
+      }
+    });
   });
 });
 
