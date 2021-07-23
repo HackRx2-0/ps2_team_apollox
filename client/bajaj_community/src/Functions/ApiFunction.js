@@ -12,7 +12,7 @@ export async function OtpLogin(token) {
         console.log("serverrrrr", response.data.token)
         res = response.data
         storeData("authTokenServer", response.data.token)
-        Store.setAuthToken(response.data.token)
+        Store.setAuthToken(response.data)
     }).catch((err) => {
         console.log(err)
     })
@@ -21,6 +21,7 @@ export async function OtpLogin(token) {
 
 export async function GoogleLogin(token) {
     var res = null;
+    console.log("google api tokennn", token)
     await axios.post(apiBaseUrl + '/auth/login/google', {
         "token": token
     }).then(async (response) => {
@@ -47,7 +48,24 @@ export async function updateData(name, email, phone, token) {
         }
     }).then(async (response) => {
         console.log(response.data)
+        storeData('authState', "3")
+        Store.setAuthStateVal("3")
+
     }).catch((err) => {
         console.log(err)
     })
+}
+
+export async function getUserdata(token) {
+    var sendResponse
+    await axios.get(apiBaseUrl + '/user', {
+        headers: { authorization: 'Bearer ' + token }
+    }).then((res) => {
+        console.log("userrrr data", res.data)
+        sendResponse = res.data;
+
+    }).catch((err) => {
+        console.log(err)
+    })
+    return sendResponse
 }

@@ -35,12 +35,12 @@ android_library(
 
 android_build_config(
     name = "build_config",
-    package = "com.bajaj_community",
+    package = "com.bajaj_finserv_community",
 )
 
 android_resource(
     name = "res",
-    package = "com.bajaj_community",
+    package = "com.bajaj_finserv_community",
     res = "src/main/res",
 )
 

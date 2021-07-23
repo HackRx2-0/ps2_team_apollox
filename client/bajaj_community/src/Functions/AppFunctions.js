@@ -58,6 +58,7 @@ export async function Join(name, field) {
     if (authState == '1') {
         var userUpdate = await getData('userPhone')
         updateData(name, field, userUpdate, token)
+
     }
     else {
         var userUpdate = await getData('userEmail')
@@ -85,6 +86,7 @@ export async function onGoogleButtonPress() {
                 console.log("TOKEN at confirm CODE", res)
                 const data = await GoogleLogin(res);
                 console.log("FROM SERVER GOOGLE LOGIN", data)
+                console.log("authdatat before set", Store.authState)
                 if (data.isNewUser) {
 
                     storeData('userEmail', data.email_id)
