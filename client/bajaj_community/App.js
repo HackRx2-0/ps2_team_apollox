@@ -10,7 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Store from "./src/Store/Store";
 import { Observer } from "mobx-react";
 import { HomeScreens } from './src/Navigation/HomeNavigator';
-
+import axios from "axios";
+import { apiBaseUrl } from './src/Config/Config';
 
 
 LogBox.ignoreLogs(['Warning: ...']);
@@ -30,14 +31,20 @@ function App() {
 
   useEffect(async () => {
     const authStateVal = await getData('authState')
+    const authTokenServer = await getData('authTokenServer')
+    getUserDetails()
+    console.log("WEB TOKEN", authTokenServer)
+    Store.setAuthToken(authTokenServer)
+
     setAuthState(authStateVal);
-    Store.setAuthStateVal(authStateVal);
-    //Store.setAuthStateVal("3");
+    // Store.setAuthStateVal(authStateVal);
+    Store.setAuthStateVal("3");
 
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     if (auth().currentUser) {
       auth().currentUser.getIdToken().then((res) => {
-        console.log("TOKEN", res)
+        // console.log("Firebase TOKEN", res)
+
       }).catch((err) => {
         console.log("ERR", err)
 
@@ -46,6 +53,26 @@ function App() {
 
     return subscriber; // unsubscribe on unmount
   }, []);
+
+  async function getUserDetails() {
+    const authTokenServer = await getData('authTokenServer')
+    axios.get(`${apiBaseUrl}/user`, {
+      headers: {
+        "Authorization": `Bearer ${authTokenServer}`
+      }
+    }).then((res) => {
+      console.log("USER DATA", res.data)
+      Store.setUserUid(res.data.uid)
+      Store.setUserName(res.data.name)
+
+
+      // setRoomsData(res.data)
+      // setLoading(false)
+    }).catch((err) => {
+      console.log(err)
+
+    })
+  }
 
   function onAuthStateChanged(user) {
     console.log(user)
