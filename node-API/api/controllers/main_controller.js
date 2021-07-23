@@ -7,6 +7,8 @@ const moment = require("moment");
 const uuid = require("short-uuid");
 const auth = require("../helpers/auth");
 
+const sharp = require("sharp");
+
 const firebaseAdmin = require("firebase-admin");
 const firebaseKey = require("../../config/firebase_key.json");
 firebaseAdmin.initializeApp({
@@ -155,5 +157,76 @@ exports.updateUser = (req, res) => {
     if (err) return send400(err, req, res, err.sqlMessage);
 
     send200(req, res, { message: "User Updated" });
+  });
+};
+
+exports.joinGroup = (req, res) => {
+  const uid = uuid.generate().substr(0, 8);
+  let sql = `INSERT INTO user_group_mapping (uid, user_id, group_id) 
+             VALUES ('${uid}', '${req.auth.uid}', '${req.body.group_id}');`;
+  sql += ` UPDATE groups SET user_count = user_count + 1 WHERE uid = '${req.body.group_id}'`;
+
+  db.query(sql, (err, result) => {
+    if (err) return send400(err, req, res, err.sqlMessage);
+    send200(req, res, { message: "User added to group" });
+  });
+};
+
+exports.getAllGroups = (req, res) => {
+  let sql = `SELECT uid,name,user_count FROM groups`;
+  db.query(sql, (err, result) => {
+    if (err) return send400(err, req, res, err.sqlMessage);
+    send200(req, res, result);
+  });
+};
+
+exports.getAllGroupsJoined = (req, res) => {
+  console.log(req.auth.uid);
+  let sql = `SELECT uid, group_id, user_id FROM user_group_mapping WHERE user_id = '${req.auth.uid}'`;
+
+  db.query(sql, (err, result) => {
+    if (err) return send400(err, req, res, err.sqlMessage);
+    send200(req, res, result);
+  });
+};
+
+exports.chatImageUpload = (req, res) => {
+  const unique = uuid.generate().substr(0, 5);
+  let image = req.files.image;
+  let name = `user-${"assa"}-$group-${req.body.group_id}.-${unique}.jpeg`;
+  let path = `images/chat/groups/${name}`;
+
+  if (!image) {
+    send500(err, req, res, "Could not find image");
+    return;
+  }
+
+  sharp(image.data)
+    .jpeg()
+    .toFile(`${__dirname}/../../${path}`, (err) => {
+      if (err) {
+        send400(err, req, res, "Could not upload image");
+        return;
+      }
+
+      send200(req, res, { imageUrl: path });
+    });
+};
+
+exports.chatImageAccessGroups = (req, res) => {
+  let name = req.swagger.params.name.value;
+  res.sendFile(name, { root: `images/chat/groups/` });
+};
+
+exports.getUsersForGroup = (req, res) => {
+  const group_id = req.swagger.params.group_id.value;
+  let sql = `SELECT users.uid, users.name, users.phone_no 
+             FROM user_group_mapping 
+             JOIN users ON user_group_mapping.user_id = users.uid
+             WHERE group_id = '${group_id}' `;
+
+  db.query(sql, (err, result) => {
+    if (err) return send400(err, req, res, err.sqlMessage);
+    send200(req, res, result);
   });
 };

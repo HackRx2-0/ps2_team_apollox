@@ -117,6 +117,136 @@ paths:
           schema:
             $ref: "#/definitions/Message"
 
+  /groups/all:
+    x-swagger-router-controller: main_controller
+    get:
+      description: Get list of groups
+      operationId: getAllGroups
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/ArrayGroups"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
+  /groups/my:
+    x-swagger-router-controller: main_controller
+    get:
+      description: Get list of groups joined my user
+      operationId: getAllGroupsJoined
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/ArrayGroups"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
+  /group/join:
+    x-swagger-router-controller: main_controller
+    post:
+      description: Join group. Give group_id
+      operationId: joinGroup
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      parameters:
+        - name: userGroupJoin
+          in: body
+          schema:
+            properties:
+              group_id:
+                type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
+  /chat/image:
+    x-swagger-router-controller: main_controller
+    post:
+      description: Upload image
+      operationId: chatImageUpload
+      # security:
+      #   - Bearer: []
+      # x-security-scopes:
+      #   - user
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: image
+          in: formData
+          required: true
+          type: file
+        - name: group_id
+          in: formData
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
+  /images/chat/groups/{name}:
+    x-swagger-router-controller: main_controller
+    get:
+      operationId: chatImageAccessGroups
+      description: Get uploaded image as file. Path from db
+      parameters:
+        - name: name
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "Image"
+          schema:
+            type: file
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
+
+  /group/users/all/{group_id}:
+    x-swagger-router-controller: main_controller
+    get:
+      operationId: getUsersForGroup
+      description: Get list of users joined given group
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/ArrayUsers"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
+
 
 
 # -----------------------------------------------------------
@@ -142,3 +272,32 @@ definitions:
         type: string
       create_time:
         type: string
+
+  ArrayUsers:
+    type: array
+    items:
+      $ref: "#/definitions/User"
+
+  UserLogin:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+
+  Group:
+    properties:
+      uid:
+        type: string
+      name:
+        type: string
+      create_time:
+        type: string
+      user_count:
+        type: integer
+
+  ArrayGroups:
+    type: array
+    items:
+      $ref: "#/definitions/Group"
+
