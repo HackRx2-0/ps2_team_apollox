@@ -25,8 +25,11 @@ const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {});
 
 const swaggerConfig = yaml.load(swagger);
+const { send200, send400 } = require("./api/helpers/response");
 
 const redis = require("redis");
+const { getDbMongo } = require("./api/helpers/dbMongo");
+const { default: axios } = require("axios");
 const redisClient = redis.createClient({
   host: "127.0.0.1",
   port: 6379,
@@ -59,7 +62,30 @@ function startTimer() {
       if (chatCount[key] > 2) {
         console.log("Call Some Api ML");
         console.log(chatCount);
-        chatCount[key] = 0;
+
+        const url = "http://20.204.120.208/predict";
+        getDbMongo()
+          .collection("group_chats")
+          .find({ group_id: key })
+          .sort({ createdAt: -1 })
+          .limit(chatCount[key])
+          .toArray((err, result) => {
+            if (err) console.log("could not fetch docs from chats");
+            else {
+              chatCount[key] = 0;
+              result = result.map((item) => item.message.text);
+              console.log({ conversarions: result });
+              // axios
+              //   .post(url, { conversations: result })
+              //   .then((resp) => {
+              //     console.log("got data");
+              //   })
+              //   .catch((err) => {
+              //     console.log("--------------------------------");
+              //     console.log(err);
+              //   });
+            }
+          });
       } else {
         console.log("Time up message count not met");
       }
@@ -70,6 +96,19 @@ startTimer();
 
 // SOCKET --------------------------------------------------------------------------------------------------------------------
 // START---------------------------------------------------------------------------------------------------------------------
+
+axios.post("recommendation/product/carousel", (req, res) => {
+  console.log(req.body);
+  getDbMongo()
+    .collection("recommended_products")
+    .updateOne(req.body, (err, result) => {
+      if (err) send400(req, res, "Coult not");
+      else {
+        io.emit("RECOMMENT_PRODUCT", req.body);
+        send200(req, res, { message: "Recommeneded" });
+      }
+    });
+});
 
 const userSocketMap = {};
 const userRoomMap = {};
