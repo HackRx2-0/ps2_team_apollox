@@ -177,6 +177,32 @@ paths:
           schema:
             $ref: "#/definitions/Message"
 
+  /group/leave:
+    x-swagger-router-controller: main_controller
+    post:
+      description: Leave group
+      operationId: joinGroup
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      parameters:
+        - name: userGroupLeave
+          in: body
+          schema:
+            properties:
+              group_id:
+                type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
   /chat/image:
     x-swagger-router-controller: main_controller
     post:
@@ -286,6 +312,8 @@ paths:
           description: "Error"
           schema:
             $ref: "#/definitions/Message"
+
+
 
 # -----------------------------------------------------------
 definitions:

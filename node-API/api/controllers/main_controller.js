@@ -43,11 +43,16 @@ exports.userLoginOtp = (req, res) => {
 
           db.query(sqlInsert, (err, result) => {
             if (err) return send400(err, req, res, "New User could not be inserted");
-            return send200(req, res, {
+            const foundUser = {
               uid: uid,
-              name: null,
-              email_id: null,
               phone_no: phoneNo,
+              role: "user",
+            };
+
+            let token = auth.issueToken(foundUser);
+            return send200(req, res, {
+              ...foundUser,
+              token,
               isNewUser: true,
               authMode: "phone",
             });
@@ -61,6 +66,8 @@ exports.userLoginOtp = (req, res) => {
           delete foundUser.role;
 
           let token = auth.issueToken(tokenIssue);
+
+          console.log({ ...foundUser, token });
 
           if (foundUser.email_id == null || foundUser.name === null) {
             return send200(req, res, { ...foundUser, isNewUser: true, authMode: "phone", token });
@@ -97,11 +104,16 @@ exports.userLoginGoogle = (req, res) => {
 
           db.query(sqlInsert, (err, result) => {
             if (err) return send400(err, req, res, "New User could not be inserted");
-            return send200(req, res, {
+            const foundUser = {
               uid: uid,
-              name: null,
-              phone_no: null,
               email_id: emailId,
+              role: "user",
+            };
+
+            let token = auth.issueToken(foundUser);
+            return send200(req, res, {
+              ...foundUser,
+              token,
               isNewUser: true,
               authMode: "googleOAuth",
             });
@@ -124,6 +136,7 @@ exports.userLoginGoogle = (req, res) => {
             });
           }
 
+          console.log({ ...foundUser, token });
           send200(req, res, { ...tokenIssue, authMode: "googleOAuth", isNewUser: false, token });
         }
       });
@@ -172,6 +185,14 @@ exports.joinGroup = (req, res) => {
   });
 };
 
+exports.leaveGroup = (req, res) => {
+  let sql = `DELETE FROM user_group_mapping WHERE group_id = '${req.body.group_id}' AND user_id = '${req.auth.uid}'`;
+  db.query(sql, (err, result) => {
+    if (err) return send400(err, req, res, err.sqlMessage);
+    send200(req, res, { message: "User removed from group" });
+  });
+};
+
 exports.getAllGroups = (req, res) => {
   let sql = `SELECT uid,name,user_count FROM groups`;
   db.query(sql, (err, result) => {
@@ -182,7 +203,10 @@ exports.getAllGroups = (req, res) => {
 
 exports.getAllGroupsJoined = (req, res) => {
   console.log(req.auth.uid);
-  let sql = `SELECT uid, group_id, user_id FROM user_group_mapping WHERE user_id = '${req.auth.uid}'`;
+  let sql = `SELECT DISTINCT group_id , name , user_count 
+             FROM user_group_mapping 
+             JOIN groups ON group_id = groups.uid  
+             WHERE user_id = '${req.auth.uid}'`;
 
   db.query(sql, (err, result) => {
     if (err) return send400(err, req, res, err.sqlMessage);
@@ -245,10 +269,11 @@ exports.getLatestRecommendedProducts = (req, res) => {
 };
 
 exports.getChatsForGroup = (req, res) => {
+  const group_id = req.swagger.params.group_id.value;
   const dbMongo = getDbMongo();
   dbMongo
     .collection("group_chats")
-    .find({ group_id: req.body.group_id })
+    .find({ group_id: group_id })
     .sort({ createTime: -1 })
     .toArray((err, result) => {
       if (err) return send400(err, req, res, "Could not get products");

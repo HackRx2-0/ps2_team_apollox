@@ -18,6 +18,8 @@ const swagger = fs.readFileSync("./api/swagger/swagger.yaml", "utf8");
 const { verifyToken, addChatToDatabase } = require("./api/helpers/socket");
 const db = require("./api/helpers/db");
 
+const morgan = require("morgan");
+
 const app = express();
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {});
@@ -26,6 +28,8 @@ const swaggerConfig = yaml.load(swagger);
 
 app.use(cors());
 app.use(fileUpload());
+
+app.use(morgan("dev"));
 
 app.get("/", (req, res) => {
   res.sendFile(`index.html`, { root: "./" });

@@ -1,9 +1,11 @@
 "use strict";
 
 const jwt = require("jsonwebtoken");
-const sharedSecret = require("../../config/config.json").secretToken;
+const sharedSecret = require("../../config/config.json").secretString;
 
 exports.verifyToken = function (req, authOrSecDef, token, callback) {
+  console.log("verifying token in auth");
+  console.log(token);
   function sendError() {
     return req.res.status(403).json({
       message: "Error: Access Denied",
@@ -30,7 +32,7 @@ exports.verifyToken = function (req, authOrSecDef, token, callback) {
           return callback(sendError());
         }
       } else {
-        console.log("verification errro");
+        console.log("verification error");
         console.log(verificationError);
         return callback(sendError());
       }
@@ -41,8 +43,8 @@ exports.verifyToken = function (req, authOrSecDef, token, callback) {
 };
 
 exports.issueToken = function (user) {
-  var token = jwt.sign({ ...user, iss: "Cure-MajorProject" }, sharedSecret, {
-    expiresIn: 1 * 60 * 60 * 24,
+  var token = jwt.sign({ ...user, iss: "ApolloX" }, sharedSecret, {
+    expiresIn: 2 * 60 * 60 * 24,
   });
   return token;
 };
