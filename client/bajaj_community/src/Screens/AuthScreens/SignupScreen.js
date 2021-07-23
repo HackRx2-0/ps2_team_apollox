@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { BackgroundImage } from "../../Components/BackgroundImage"
 import { customSize, height, getData, storeData } from '../../Utils/Utils';
 import { CustomInput } from '../../Components/CustomInput';
+import { Join } from '../../Functions/AppFunctions';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -11,6 +12,8 @@ function SignupScreen() {
 
     const [disabled, setDisabled] = useState(true);
     const [authState, setAuthState] = useState();
+    const [name, setName] = useState();
+    const [field, setField] = useState();
 
 
     useEffect(async () => {
@@ -47,6 +50,7 @@ function SignupScreen() {
                         keyboardType={"default"}
                         onChangeText={(res) => {
                             if (res != "") {
+                                setName(res)
                                 //Condition for button to set to true
                                 setDisabled(false)
                             } else {
@@ -61,7 +65,7 @@ function SignupScreen() {
                         IconName="mail"
                         IconSize={22}
                         IconColor={"#c4c4c4"}
-                        placeholder={"Email Address"}
+                        placeholder={authState == "1" ? "Email Address" : "Phone Number"}
                         placeholderTextColor={"#c4c4c4"}
                         keyboardType={"email-address"}
                         feather={true}
@@ -69,6 +73,7 @@ function SignupScreen() {
 
                         onChangeText={(res) => {
                             if (res != "") {
+                                setField(res)
                                 //Condition for button to set to true
                                 setDisabled(false)
                             } else {
@@ -78,10 +83,10 @@ function SignupScreen() {
                     />
                     <Pressable
                         style={[styles.button, { backgroundColor: disabled ? "#cbcaca" : "#09bc8a", }]}
-                        disabled={disabled}
+                        // disabled={disabled}
                         onPress={() => {
                             // alert("clicked")
-                            navigation.navigate("OtpVerify")
+                            Join(name, field)
                         }}
 
                     >

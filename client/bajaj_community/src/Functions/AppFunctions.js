@@ -2,8 +2,10 @@ import auth from '@react-native-firebase/auth';
 import React, { useState } from 'react';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { WEB_CLIENT_ID } from "../Config/Config"
-import { showNotification, storeData } from '../Utils/Utils';
+import { showNotification, storeData, getData } from '../Utils/Utils';
 import Store from '../Store/Store';
+import { OtpLogin, GoogleLogin, updateData } from './ApiFunction';
+
 GoogleSignin.configure({
     webClientId: WEB_CLIENT_ID,
 });
@@ -18,11 +20,27 @@ export async function confirmCode(code) {
 
     try {
         const data = await confirmationData.confirm(code);
-        storeData('authState', "1")
-        Store.setAuthStateVal("1")
-        setTimeout(() => {
 
-        }, 1000)
+        if (auth().currentUser) {
+            auth().currentUser.getIdToken().then(async (res) => {
+                console.log("TOKEN at confirm CODE", res)
+                const data = await OtpLogin(res);
+                console.log("FROM SERVER", data)
+                if (data.isNewUser) {
+
+                    storeData('userPhone', data.phone_no)
+                    storeData('authState', "1")
+                    Store.setAuthStateVal("1")
+                } else {
+                    storeData('authState', "3")
+                    Store.setAuthStateVal("3")
+                }
+
+            }).catch((err) => {
+                console.log("ERR", err)
+
+            })
+        }
 
 
         return data;
@@ -30,6 +48,20 @@ export async function confirmCode(code) {
         showNotification("Invalid Code")
         console.log(error.message)
         return error;
+    }
+}
+export async function Join(name, field) {
+    const authState = await getData('authState')
+    var token = await getData('authTokenServer')
+    console.log(authState)
+    console.log("tooooo", token)
+    if (authState == '1') {
+        var userUpdate = await getData('userPhone')
+        updateData(name, field, userUpdate, token)
+    }
+    else {
+        var userUpdate = await getData('userEmail')
+        updateData(name, userUpdate, field, token)
     }
 }
 
@@ -42,9 +74,32 @@ export async function onGoogleButtonPress() {
 
     // Sign-in the user with the credential
     //return auth().signInWithCredential(googleCredential);
-    if (auth().signInWithCredential(googleCredential)) {
-        storeData("authState", "2")
-        Store.setAuthStateVal("2")
+
+    const status = await auth().signInWithCredential(googleCredential)
+    console.log("GOOGLE FUN", status)
+    if (status) {
+        // storeData("authState", "2")
+        // Store.setAuthStateVal("2")
+        if (auth().currentUser) {
+            auth().currentUser.getIdToken().then(async (res) => {
+                console.log("TOKEN at confirm CODE", res)
+                const data = await GoogleLogin(res);
+                console.log("FROM SERVER GOOGLE LOGIN", data)
+                if (data.isNewUser) {
+
+                    storeData('userEmail', data.email_id)
+                    storeData('authState', "2")
+                    Store.setAuthStateVal("2")
+                } else {
+                    storeData('authState', "3")
+                    Store.setAuthStateVal("3")
+                }
+
+            }).catch((err) => {
+                console.log("ERR", err)
+
+            })
+        }
     }
     return true
 }
