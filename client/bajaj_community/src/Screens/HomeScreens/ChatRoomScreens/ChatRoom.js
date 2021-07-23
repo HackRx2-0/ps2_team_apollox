@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Button, FlatList, Text, View, TouchableOpacity, Image, LogBox, Pressable, Modal, Linking } from 'react-native';
+import { Button, FlatList, Text, View, TouchableOpacity, Image, LogBox, Pressable, ActivityIndicator, Modal, Linking } from 'react-native';
 import io from "socket.io-client";
 import Store from '../../../Store/Store';
 import uuid from "react-native-uuid"
@@ -31,7 +31,7 @@ export default function ChatScreen({ route, navigation }) {
     const [unqid, setunqid] = useState(null)
 
     const [filePath, setFilePath] = useState(null);
-    const [modalVisible, setModalVisible] = useState(false)
+    const [msgLoading, setMsgLoading] = useState(true)
 
 
 
@@ -57,13 +57,18 @@ export default function ChatScreen({ route, navigation }) {
             "Animated.event now requires a second argument for options"
         ])
         LogBox.ignoreLogs(['Warning: ...']);
-        console.log("USEFECECT 2")
-        console.log(Store.user_uid)
-        console.log(Store.user_name)
+        // console.log("USEFECECT 2")
+        // console.log(Store.user_uid)
+        // console.log(Store.user_name)
         getOldChats(group_id)
+
         if (socket != null) {
+            console.log("INSIDE SOCKET")
             socket.on("connect", (res) => {
                 console.log("CONNECTED", socket.id)
+            })
+            socket.on("RECOMMEND_PRODUCT", (res) => {
+                console.log("RECOMMENDED PRODUCT", res)
             })
             socket.on("GRP_MSG", (msg) => {
 
@@ -98,11 +103,11 @@ export default function ChatScreen({ route, navigation }) {
                 "Authorization": `Bearer ${Store.authToken}`
             }
         }).then((res) => {
-            console.log("all rooms", res.data)
+            // console.log("all rooms", res.data)
             // setMessages(previousState => GiftedChat.append(previousState, res.data));
             var mes = [];
             for (let i = res.data.length - 1; i >= 0; i--) {
-                console.log(res.data[i])
+                // console.log(res.data[i])
                 const newMessage = {
                     _id: res.data[i].message._id,
                     text: res.data[i].message.text,
@@ -117,6 +122,7 @@ export default function ChatScreen({ route, navigation }) {
                 mes.push(newMessage)
             }
             setMessages(mes)
+            setMsgLoading(false)
 
         }).catch((err) => {
             console.log(err)
@@ -246,16 +252,7 @@ export default function ChatScreen({ route, navigation }) {
 
     }
     function renderMessageImage(props) {
-        console.log(props.currentMessage.image)
-        const renderCarousel = () => (
 
-            <Image
-                style={{ flex: 1 }}
-                resizeMode="contain"
-                source={{ uri: "https://www.yayomg.com/wp-content/uploads/2014/04/yayomg-pig-wearing-party-hat.jpg" }}
-            />
-
-        )
         return (
             <MessageImage
                 imageStyle={{ borderRadius: 5 }}
@@ -674,7 +671,7 @@ export default function ChatScreen({ route, navigation }) {
 
                                     }}
                                 >
-                                    Product recommendations for you
+
                                 </Text>
                                 <Text
                                     style={{
@@ -695,57 +692,70 @@ export default function ChatScreen({ route, navigation }) {
                         </View>
                 )
             }</Observer>
-            <View style={{ flex: 1 }}>
-                <GiftedChat
-                    messages={messages}
-                    onSend={messages => onSend(messages, { image: filePath })}
-                    // onSend={messages => onSend(messages, { image: filePath })}
+            {msgLoading ?
+                <View style={{ flex: 1, justifyContent: "center", alignSelf: "center" }}>
 
-                    user={{
-                        _id: Store.user_uid,
-                        name: Store.user_name,
-                        avatar: 'https://placeimg.com/140/140',
-                    }}
-                    renderUsernameOnMessage={true}
-                    showAvatarForEveryMessage
-                    renderComposer={renderComposer}
-                    renderActions={renderActions}
-                    messagesContainerStyle={{
-                        paddingBottom: filePath ? 100 : "5%"
 
-                    }}
-                    onPressAvatar={(user) => {
-                        navigation.navigate("FriendChatRoom", { user: user, socket: socket })
-                    }}
-                    // renderSend={renderSend}
-                    renderBubble={BubbleChat}
-                    alwaysShowSend
-                    renderAvatarOnTop
+                    <ActivityIndicator
+                        color='#1d6ff2'
+                        size={48}
+                        animating={msgLoading}
+                    />
 
-                    renderMessageImage={
-                        renderMessageImage
-                    }
-                    renderInputToolbar={customtInputToolbar}
-                    renderSend={renderSend}
-                    parsePatterns={(item) => [
-                        {
-                            type: "url",
-                            style: {
-                                textDecorationLine: "underline",
-                                color:
-                                    item && item[0].color === "black"
-                                        ? "red"
-                                        : "blue"
-                            },
-                            onPress: async (res) => {
-                                console.log("rES", res)
-                                navigation.navigate("Web", { link: res })
-                            }
+
+                </View> :
+                <View style={{ flex: 1 }}>
+                    <GiftedChat
+                        messages={messages}
+
+                        onSend={messages => onSend(messages, { image: filePath })}
+                        // onSend={messages => onSend(messages, { image: filePath })}
+
+                        user={{
+                            _id: Store.user_uid,
+                            name: Store.user_name,
+                            avatar: 'https://placeimg.com/140/140',
+                        }}
+                        renderUsernameOnMessage={true}
+                        showAvatarForEveryMessage
+                        renderComposer={renderComposer}
+                        renderActions={renderActions}
+                        messagesContainerStyle={{
+                            paddingBottom: filePath ? 100 : "5%"
+
+                        }}
+                        onPressAvatar={(user) => {
+                            navigation.navigate("FriendChatRoom", { user: user, socket: socket })
+                        }}
+                        // renderSend={renderSend}
+                        renderBubble={BubbleChat}
+                        alwaysShowSend
+                        renderAvatarOnTop
+
+                        renderMessageImage={
+                            renderMessageImage
                         }
+                        renderInputToolbar={customtInputToolbar}
+                        renderSend={renderSend}
+                        parsePatterns={(item) => [
+                            {
+                                type: "url",
+                                style: {
+                                    textDecorationLine: "underline",
+                                    color:
+                                        item && item[0].color === "black"
+                                            ? "red"
+                                            : "blue"
+                                },
+                                onPress: async (res) => {
+                                    console.log("rES", res)
+                                    navigation.navigate("Web", { link: res })
+                                }
+                            }
 
-                    ]}
-                />
-            </View>
+                        ]}
+                    />
+                </View>}
 
         </View>
     );
