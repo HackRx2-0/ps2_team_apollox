@@ -66,7 +66,7 @@ async def apireturn(conversations,group_id):
     prodimageurl = []
     prodprice = []
     prodname = []
-    credential = AzureKeyCredential("4a93d802b3fc486d81e3928a79a0ee26")
+    credential = AzureKeyCredential(<API_KEY>)
     endpoint="https://centralindia.api.cognitive.microsoft.com/"
 
     text_analytics_client = TextAnalyticsClient(endpoint, credential)   
