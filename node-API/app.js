@@ -76,6 +76,7 @@ io.use((socket, next) => {
       next();
     }
   } catch (err) {
+    console.log("Io MW error")
     console.log(err);
     next(new Error("Error Occured"));
   }
@@ -188,4 +189,4 @@ swaggerTools.initializeMiddleware(swaggerConfig, (middleware) => {
   });
 });
 
-// 20.204.23.216
+
