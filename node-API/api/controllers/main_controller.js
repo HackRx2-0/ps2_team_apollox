@@ -285,6 +285,7 @@ exports.getChatsForGroup = (req, res) => {
 
 exports.updateLatestProductRecommended = (req, res) => {
   const insertData = { ...req.body, createTime: getCurrTime(true) };
+  console.log(insertData);
   getDbMongo()
     .collection("recommended_products")
     .insertOne(insertData, (err, result) => {
