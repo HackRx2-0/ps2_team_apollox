@@ -37,8 +37,8 @@ function App() {
     Store.setAuthToken(authTokenServer)
 
     setAuthState(authStateVal);
-    // Store.setAuthStateVal(authStateVal);
-    Store.setAuthStateVal("3");
+    Store.setAuthStateVal(authStateVal);
+    // Store.setAuthStateVal("3");
 
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     if (auth().currentUser) {
@@ -84,7 +84,7 @@ function App() {
   //authstate 1 = otp success but email not given
   //authstate 2 = email success but phone not given
   //authstate 3 = both Success
-  console.log(Store.authState)
+  console.log("authdatat before APP>JS", Store.authState)
   return (
     <Observer>
       {() => (

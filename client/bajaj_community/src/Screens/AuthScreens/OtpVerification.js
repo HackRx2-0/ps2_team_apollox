@@ -33,9 +33,7 @@ function OtpScreen({ navigation }) {
         console.log(data)
 
 
-        return () => {
-            RNOtpVerify.removeListener();
-        }
+        return () => RNOtpVerify.removeListener();
     }, [])
     function otpHandler(message) {
         console.log("message", message)

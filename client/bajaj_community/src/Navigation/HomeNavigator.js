@@ -4,7 +4,7 @@ import { getFocusedRouteNameFromRoute, NavigationContainer } from '@react-naviga
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import DiscussionScreen from "../Screens/HomeScreens/DiscussionsScreen";
 import FriendsScreen from "../Screens/HomeScreens/Friends";
-import AccountScreen from "../Screens/HomeScreens/Account";
+import AccountScreen from "../Screens/HomeScreens/AccountScreen/Account";
 
 import { ChatRoomScreen } from './ChatNavigator';
 
@@ -114,7 +114,7 @@ export function HomeScreens() {
                     tabBarVisible: ((route) => {
                         const routeName = getFocusedRouteNameFromRoute(route) ?? ""
                         console.log(routeName)
-                        if (routeName === "ChatRoom") {
+                        if (routeName === "ChatRoom" || routeName === "FriendChatRoom" || routeName === "Web" || routeName === "ChatRoomInfo") {
                             return false
                         }
 
