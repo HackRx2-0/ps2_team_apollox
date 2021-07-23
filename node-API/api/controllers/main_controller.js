@@ -256,11 +256,13 @@ exports.getUsersForGroup = (req, res) => {
 };
 
 exports.getLatestRecommendedProducts = (req, res) => {
+  const group_id = req.swagger.params.group_id.value;
   const dbMongo = getDbMongo();
   dbMongo
     .collection("recommended_products")
-    .find({ group_id: req.body.group_id })
-    .sort({ createTime: 1 })
+    .find({ group_id: group_id })
+    .sort({ createTime: -1 })
+    .limit(5)
     .toArray((err, result) => {
       if (err) return send400(err, req, res, "Could not get products");
 
@@ -277,6 +279,76 @@ exports.getChatsForGroup = (req, res) => {
     .sort({ createTime: -1 })
     .toArray((err, result) => {
       if (err) return send400(err, req, res, "Could not get products");
+      return send200(req, res, result);
+    });
+};
+
+exports.updateLatestProductRecommended = (req, res) => {
+  const insertData = { ...req.body, createTime: getCurrTime(true) };
+  getDbMongo()
+    .collection("recommended_products")
+    .insertOne(insertData, (err, result) => {
+      if (err) send400(req, res, "Coult not");
+      else {
+        req.socketObject.emit("RECOMMEND_PRODUCT", { ...insertData, _id: result.insertedId });
+        send200(req, res, { message: "Recommeneded" });
+      }
+    });
+};
+
+exports.favoriteProduct = (req, res) => {
+  const user_id = req.auth.uid;
+  const prod_id = req.body.prod_id;
+  const uid = uuid.generate().substr(0, 8);
+
+  let sql = `INSERT INTO user_prod_mapping (uid, user_id, prod_id) VALUES ('${uid}', '${user_id}', '${prod_id}')`;
+  db.query(sql, (err, result) => {
+    if (err) return send400(err, req, res, eqq.sqlMessage);
+
+    return send200(req, res, { result: "Added to favorites" });
+  });
+};
+
+exports.getFavorites = (req, res) => {
+  let sql = `SELECT uid, prod_id FROM user_group_mapping WHERE user_id='${req.auth.uid}'`;
+  db.query(sql, (err, result) => {
+    if (err) return send400(err, req, res, eqq.sqlMessage);
+
+    let arrProdIds = result.map((item) => ObjectID(item.prod_id));
+    getDbMongo()
+      .collection("recommended_products")
+      .find({ _id: { $in: arrProdIds } })
+      .toArray((err, result) => {
+        if (err) return send400(err, req, res, "MongoError");
+        return 200(req, res, result);
+      });
+  });
+};
+
+exports.addForumPost = (req, res) => {
+  const insertData = {
+    title: req.body.title,
+    body: req.body.body,
+    topic: req.body.topic,
+    user_id: req.auth.uid,
+    comments: [],
+    likes: 0,
+  };
+
+  getDbMongo()
+    .collection("forum_posts")
+    .insertOne(insertData, (err, result) => {
+      if (err) return send400(err, req, res, "Could not insert data");
+      return send200(req, res, { newUid: result.insertedId, message: "Post Added" });
+    });
+};
+
+exports.getAllFeeds = (req, res) => {
+  getDbMongo()
+    .collection("forum_posts")
+    .find({})
+    .toArray((err, result) => {
+      if (err) return send400(err, req, res, "Could not get data");
       return send200(req, res, result);
     });
 };
