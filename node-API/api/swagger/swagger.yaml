@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   version: "0.0.1"
-  title: Cure App - Major Project
+  title: ApolloX
 
 host: localhost:3000
 basePath: /
@@ -11,6 +11,9 @@ schemes:
   - https
 consumes:
   - application/json
+  - application/x-www-form-urlencoded
+  - application/octet-stream
+  - multipart/form-data
 produces:
   - application/json
 
@@ -26,23 +29,6 @@ securityDefinitions:
 paths:
   /user:
     x-swagger-router-controller: main_controller
-    post:
-      description: Add User
-      operationId: createUser
-      parameters:
-        - name: newUser
-          in: body
-          schema:
-            $ref: "#/definitions/NewUser"
-      responses:
-        "200":
-          description: Success
-          schema:
-            $ref: "#/definitions/Message"
-        default:
-          description: Error
-          schema:
-            $ref: "#/definitions/Message"
     get:
       description: User profile
       operationId: getUser
@@ -59,17 +45,24 @@ paths:
           description: Error
           schema:
             $ref: "#/definitions/Message"
-
-  /auth/login:
-    x-swagger-router-controller: main_controller
-    post:
-      description: Login User
-      operationId: loginUser
+    put:
+      description: Update User
+      operationId: updateUser
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
       parameters:
-        - name: userLogin
+        - name: userUpdate
           in: body
           schema:
-            $ref: "#/definitions/UserLogin"
+            properties:
+              name:
+                type: string
+              email_id:
+                type: string
+              phone_no:
+                type: string
       responses:
         "200":
           description: Success
@@ -80,6 +73,52 @@ paths:
           schema:
             $ref: "#/definitions/Message"
 
+  /auth/login/otp:
+    x-swagger-router-controller: main_controller
+    post:
+      description: Login User through OTP. Send ID token
+      operationId: userLoginOtp
+      parameters:
+        - name: userLoginOtp
+          in: body
+          schema:
+            properties:
+              token:
+                type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
+  /auth/login/google:
+    x-swagger-router-controller: main_controller
+    post:
+      description: Login User through google. Send ID token
+      operationId: userLoginGoogle
+      parameters:
+        - name: userLoginGoogle
+          in: body
+          schema:
+            properties:
+              token:
+                type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
+
+
 # -----------------------------------------------------------
 definitions:
   Message:
@@ -89,40 +128,17 @@ definitions:
       message:
         type: string
 
-  NewUser:
-    required:
-      - name
-      - email
-      - password
-    properties:
-      name:
-        type: string
-      email:
-        type: string
-      password:
-        type: string
-      role:
-        type: string
   User:
     properties:
       uid:
         type: string
       name:
         type: string
-      email:
+      email_id:
         type: string
-      password:
+      phone_no:
         type: string
       role:
         type: string
       create_time:
-        type: string
-  UserLogin:
-    required:
-      - email
-      - password
-    properties:
-      email:
-        type: string
-      password:
         type: string

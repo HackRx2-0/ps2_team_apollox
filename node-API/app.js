@@ -1,26 +1,33 @@
 "use strict";
 
 const fs = require("fs");
-
+const http = require("http");
 const express = require("express");
-const cors = require("cors");
-
 const fileUpload = require("express-fileupload");
-
+const cors = require("cors");
+const moment = require("moment");
 const swaggerTools = require("swagger-tools");
 const yaml = require("js-yaml");
+const socketIo = require("socket.io");
 
 const config = require("./config/config.json");
+const initDb = require("./api/helpers/dbMongo").initDb;
+const auth = require("./api/helpers/auth");
+const handleError = require("./api/helpers/error").handleError;
 const swagger = fs.readFileSync("./api/swagger/swagger.yaml", "utf8");
 
-const { handleError } = require("./api/helpers/error");
-const auth = require("./api/helpers/auth");
-
 const app = express();
+const httpServer = http.createServer(app);
+const io = socketIo(httpServer, {});
+
 const swaggerConfig = yaml.load(swagger);
 
 app.use(cors());
 app.use(fileUpload());
+
+app.get("/", (req, res) => {
+  res.sendFile(`index.html`, { root: "./" });
+});
 
 function catchError(err, req, res, next) {
   console.log(err.code);
@@ -58,9 +65,13 @@ swaggerTools.initializeMiddleware(swaggerConfig, (middleware) => {
   app.use(middleware.swaggerRouter(routerConfig));
 
   const port = config.port;
-
-  app.listen(port, (err) => {
-    if (err) throw err;
-    console.log(`Started server on port: ${port}`);
+  httpServer.listen(port, (error) => {
+    if (error) throw error;
+    console.log("Server Running on port " + port);
+    // initDb((err) => {
+    //   if (err) throw err;
+    // });
   });
 });
+
+// 20.204.23.216
