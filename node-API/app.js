@@ -97,7 +97,7 @@ startTimer();
 // SOCKET --------------------------------------------------------------------------------------------------------------------
 // START---------------------------------------------------------------------------------------------------------------------
 
-axios.post("recommendation/product/carousel", (req, res) => {
+app.post("recommendation/product/carousel", (req, res) => {
   console.log(req.body);
   getDbMongo()
     .collection("recommended_products")

@@ -73,6 +73,24 @@ paths:
           schema:
             $ref: "#/definitions/Message"
 
+  /user/favorites/products:
+    get:
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      description: Get list of groups
+      operationId: getAllGroups
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/ArrayGroups"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
   /auth/login/otp:
     x-swagger-router-controller: main_controller
     post:
@@ -273,6 +291,32 @@ paths:
           schema:
             $ref: "#/definitions/Message"
 
+  /recommendation/product/favorite:
+    x-swagger-router-controller: main_controller
+    post:
+      description: Like the product
+      operationId: favoriteProduct
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      parameters:
+        - name: product
+          in: body
+          schema:
+            properties:
+              product_id:
+                type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
   /recommendation/products/latest/{group_id}:
     x-swagger-router-controller: main_controller
     get:
@@ -293,25 +337,25 @@ paths:
           schema:
             $ref: "#/definitions/Message"
 
-  # /recommendation/product/carousel:
-  #   x-swagger-router-controller: main_controller
-  #   post:
-  #     operationId: updateLatestProductRecommended
-  #     description: update latest product in mongo
-  #     parameters:
-  #       - name: product
-  #         in: body
-  #         schema:
-  #           type: object
-  #     responses:
-  #       "200":
-  #         description: "Success"
-  #         schema:
-  #           $ref: "#/definitions/Message"
-  #       default:
-  #         description: "Error"
-  #         schema:
-  #           $ref: "#/definitions/Message"
+  /recommendation/product/carousel:
+    x-swagger-router-controller: main_controller
+    post:
+      operationId: updateLatestProductRecommended
+      description: update latest product in mongo
+      parameters:
+        - name: product
+          in: body
+          schema:
+            type: object
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
 
   /chats/{group_id}:
     x-swagger-router-controller: main_controller
@@ -330,6 +374,51 @@ paths:
             $ref: "#/definitions/Message"
         default:
           description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
+
+  /forum/post:
+    x-swagger-router-controller: main_controller
+    post:
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      operationId: addForumPost
+      description: add forum post
+      parameters:
+        - name: forumPost
+          in: body
+          schema:
+            properties:
+              title:
+                type: string
+              body:
+                type: string
+              topic:
+                type: string
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
+
+  /forum/posts/all:
+    x-swagger-router-controller: main_controller
+    get:
+      description: Get all forum posts
+      operationId: getAllFeeds
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/ArrayGroups"
+        default:
+          description: Error
           schema:
             $ref: "#/definitions/Message"
 
