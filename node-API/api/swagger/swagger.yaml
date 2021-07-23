@@ -247,7 +247,45 @@ paths:
           schema:
             $ref: "#/definitions/Message"
 
+  /recommendation/products/latest/{group_id}:
+    x-swagger-router-controller: main_controller
+    get:
+      operationId: getLatestRecommendedProducts
+      description: Get list of recent recommendation
+      parameters:
+        - name: group_id
+          in: path
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
 
+  /chats/{group_id}:
+    x-swagger-router-controller: main_controller
+    get:
+      operationId: getChatsForGroup
+      description: Get list of chats
+      parameters:
+        - name: group_id
+          in: path
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
 
 # -----------------------------------------------------------
 definitions:
@@ -300,4 +338,3 @@ definitions:
     type: array
     items:
       $ref: "#/definitions/Group"
-

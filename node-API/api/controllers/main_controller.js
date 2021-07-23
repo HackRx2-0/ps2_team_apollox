@@ -230,3 +230,28 @@ exports.getUsersForGroup = (req, res) => {
     send200(req, res, result);
   });
 };
+
+exports.getLatestRecommendedProducts = (req, res) => {
+  const dbMongo = getDbMongo();
+  dbMongo
+    .collection("recommended_products")
+    .find({ group_id: req.body.group_id })
+    .sort({ createTime: 1 })
+    .toArray((err, result) => {
+      if (err) return send400(err, req, res, "Could not get products");
+
+      return send200(req, res, result);
+    });
+};
+
+exports.getChatsForGroup = (req, res) => {
+  const dbMongo = getDbMongo();
+  dbMongo
+    .collection("group_chats")
+    .find({ group_id: req.body.group_id })
+    .sort({ createTime: -1 })
+    .toArray((err, result) => {
+      if (err) return send400(err, req, res, "Could not get products");
+      return send200(req, res, result);
+    });
+};
