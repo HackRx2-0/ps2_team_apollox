@@ -293,6 +293,26 @@ paths:
           schema:
             $ref: "#/definitions/Message"
 
+  # /recommendation/product/carousel:
+  #   x-swagger-router-controller: main_controller
+  #   post:
+  #     operationId: updateLatestProductRecommended
+  #     description: update latest product in mongo
+  #     parameters:
+  #       - name: product
+  #         in: body
+  #         schema:
+  #           type: object
+  #     responses:
+  #       "200":
+  #         description: "Success"
+  #         schema:
+  #           $ref: "#/definitions/Message"
+  #       default:
+  #         description: "Error"
+  #         schema:
+  #           $ref: "#/definitions/Message"
+
   /chats/{group_id}:
     x-swagger-router-controller: main_controller
     get:
@@ -312,8 +332,6 @@ paths:
           description: "Error"
           schema:
             $ref: "#/definitions/Message"
-
-
 
 # -----------------------------------------------------------
 definitions:
