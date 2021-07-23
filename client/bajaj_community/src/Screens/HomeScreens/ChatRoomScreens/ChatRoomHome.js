@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, createRef } from 'react';
 import { Text, View, StyleSheet, FlatList, ActivityIndicator, RefreshControl, Pressable, Image, ScrollView, Alert, LogBox } from 'react-native';
 import { customSize, height, showNotification, width } from '../../../Utils/Utils';
 import axios from 'axios';
@@ -6,8 +6,10 @@ import { apiBaseUrl } from '../../../Config/Config';
 import Store from '../../../Store/Store';
 import io from "socket.io-client";
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
+import ActionSheet from "react-native-actions-sheet";
+const actionSheetRef = createRef();
 export default function ChatRoomHome({ navigation }) {
+
     const [roomsData, setRoomsData] = useState("");
     const [allroomsData, setAllRoomsData] = useState("");
 
@@ -15,6 +17,9 @@ export default function ChatRoomHome({ navigation }) {
     const [isLoadingAllrooms, setLoadingAllRooms] = useState(true);
 
     const [socket, setSocket] = useState(null)
+    const [groupID, setGroupID] = useState(null)
+    const [groupName, setGroupName] = useState(null)
+
 
 
     useEffect(() => {
@@ -48,11 +53,10 @@ export default function ChatRoomHome({ navigation }) {
             console.log("all rooms", res.data)
             setAllRoomsData(res.data)
             setLoadingAllRooms(false)
-            setLoading(false)
+
 
         }).catch((err) => {
             console.log(err)
-            setLoading(false)
 
         })
         navigation.addListener("focus", () => {
@@ -63,7 +67,53 @@ export default function ChatRoomHome({ navigation }) {
 
     }, [])
 
+    function joinGroup(id, name) {
 
+        console.log(id, name)
+        let payload = {
+            group_id: id
+        }
+
+
+        axios.post(`${apiBaseUrl}/group/join`, {
+            group_id: id
+        }, {
+            headers: {
+                "Authorization": `Bearer ${Store.authToken}`
+            }
+        },
+        ).then((res) => {
+            actionSheetRef.current?.hide();
+            console.log("all rooms", res.data)
+            socket.emit("JOIN_ROOM", payload, (res) => {
+                if (res.status == "NOK") {
+                    showNotification("Error Try Again")
+                    return
+                } else {
+
+                    showNotification("Joined Successfully")
+                    // console.log("ID", item.uid)
+                    // console.log("ID", socket)
+                    // console.log("ID", item.name)
+
+                    navigation.navigate("ChatRoom", {
+                        group_id: id,
+                        socket: socket, name: name
+                    })
+                }
+            })
+
+            // setAllRoomsData(res.data)
+            // setLoadingAllRooms(false)
+
+        }).catch((err) => {
+            actionSheetRef.current?.hide();
+            console.log(err)
+            showNotification("Error Try Again")
+
+        })
+
+    }
     function getMyGroup() {
         axios.get(`${apiBaseUrl}/groups/my`, {
             headers: {
@@ -115,56 +165,9 @@ export default function ChatRoomHome({ navigation }) {
                         console.log("JOIN ROOM", res)
                         //if NOKAY USER IS NOT ADDED IN ROOM
                         if (res.status == "NOK") {
-
-
-                            Alert.alert(
-                                `Join Group`,
-                                `${item.name}`,
-                                [
-                                    {
-                                        text: "Cancel",
-                                        onPress: () => showNotification("Action Cancelled"),
-                                        style: "cancel"
-                                    },
-                                    {
-                                        text: "OK", onPress: () => {
-                                            axios.post(`${apiBaseUrl}/group/join`, {
-                                                group_id: item.uid
-                                            }, {
-                                                headers: {
-                                                    "Authorization": `Bearer ${Store.authToken}`
-                                                }
-                                            },
-                                            ).then((res) => {
-                                                console.log("all rooms", res.data)
-                                                socket.emit("JOIN_ROOM", payload, (res) => {
-                                                    if (res.status == "NOK") {
-                                                        showNotification("Error Try Again")
-                                                        return
-                                                    } else {
-                                                        showNotification("Joined Successfully")
-                                                        // console.log("ID", item.uid)
-                                                        // console.log("ID", socket)
-                                                        // console.log("ID", item.name)
-
-                                                        navigation.navigate("ChatRoom", {
-                                                            group_id: item.uid,
-                                                            socket: socket, name: item.name
-                                                        })
-                                                    }
-                                                })
-
-                                                // setAllRoomsData(res.data)
-                                                // setLoadingAllRooms(false)
-
-                                            }).catch((err) => {
-                                                console.log(err)
-
-                                            })
-                                        }
-                                    }
-                                ]
-                            );
+                            actionSheetRef.current?.setModalVisible();
+                            setGroupID(item.uid)
+                            setGroupName(item.name)
                             // console.log("ID PASSED", item.uid)
                             // console.log("dsadsadasdsadsadsad", Store.authToken)
 
@@ -358,47 +361,44 @@ export default function ChatRoomHome({ navigation }) {
                             Place where like minded people discuss about products they like and get more insights
                         </Text>
                     </View>
-                    {
 
-                        roomsData ?
-                            <View>
-                                <Text style={{
-                                    color: "#000000",
-                                    fontFamily: "Inter-Bold",
-                                    fontSize: customSize(15),
+                    <View>
+                        <Text style={{
+                            color: "#000000",
+                            fontFamily: "Inter-Bold",
+                            fontSize: customSize(15),
 
-                                    padding: "4%"
-                                }}>
-                                    Joined chat rooms
-                                </Text>
-                                <View
-                                    style={{
-                                        height: 1,
-                                        width: "100%",
-                                        backgroundColor: "#d4d4d4",
-                                    }}
-                                />
-                                <FlatList
-                                    data={roomsData}
-                                    numColumns={1}
-                                    // contentContainerStyle={{
+                            padding: "4%"
+                        }}>
+                            Joined chat rooms
+                        </Text>
+                        <View
+                            style={{
+                                height: 1,
+                                width: "100%",
+                                backgroundColor: "#d4d4d4",
+                            }}
+                        />
+                        <FlatList
+                            data={roomsData}
+                            numColumns={1}
+                            // contentContainerStyle={{
 
-                                    //     alignContent: "space-around",
-                                    //     backgroundColor: "red"
-                                    // }}
+                            //     alignContent: "space-around",
+                            //     backgroundColor: "red"
+                            // }}
 
-                                    renderItem={renderItemJoinedFunc}
-                                    keyExtractor={item => item.group_id}
+                            renderItem={renderItemJoinedFunc}
+                            keyExtractor={item => item.group_id}
 
-                                    ItemSeparatorComponent={FlatListItemSeparator}
+                            ItemSeparatorComponent={FlatListItemSeparator}
 
 
-                                />
-                            </View>
+                        />
+                    </View>
 
-                            :
-                            null}
-                    {<View >
+
+                    <View >
                         <Text style={{
                             color: "#000000",
                             fontFamily: "Inter-Bold",
@@ -424,9 +424,58 @@ export default function ChatRoomHome({ navigation }) {
 
                         />
 
-                    </View>}
+                    </View>
 
                 </ScrollView>
+                <ActionSheet ref={actionSheetRef}
+                    containerStyle={{
+                        height: 150, width: width,
+                        borderTopRightRadius: 20, borderTopLeftRadius: 20, backgroundColor: "#303d4b",
+                        justifyContent: "center", flex: 1
+
+                    }}
+                >
+                    <View style={{
+                        height: 150, width: width, borderTopRightRadius: 20,
+                        borderTopLeftRadius: 20, backgroundColor: "#303d4b"
+                    }}>
+                        <Pressable onPress={() => {
+                            actionSheetRef.current?.hide();
+                            showNotification("Action Cancelled")
+
+                        }}
+                            style={{ alignSelf: "center", marginTop: "6%" }}
+                        >
+                            <Text style={{
+                                color: "#ffffff",
+                                fontSize: customSize(14),
+                                fontFamily: "Inter-SemiBold"
+                            }}>
+                                Go Back
+                            </Text>
+                        </Pressable>
+                        <Pressable style={{
+                            alignSelf: "center",
+                            width: width - 60,
+                            marginTop: "5%",
+                            height: 50,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: 10,
+                            backgroundColor: "#09bc8a"
+                        }}
+                            onPress={() => {
+                                console.log("passed group id", groupID)
+                                joinGroup(groupID, groupName)
+
+                            }}
+                        >
+                            <Text>
+                                JOIN ROOM
+                            </Text>
+                        </Pressable>
+                    </View>
+                </ActionSheet>
             </View>
     );
 }

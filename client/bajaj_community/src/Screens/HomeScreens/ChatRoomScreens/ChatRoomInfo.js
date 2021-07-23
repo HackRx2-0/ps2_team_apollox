@@ -2,10 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Text, TouchableOpacity, View, Image, FlatList } from 'react-native';
 import Ionicons from "react-native-vector-icons/Ionicons"
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"
-import { customSize, height, width } from '../../../Utils/Utils';
+import { customSize, height, showNotification, width } from '../../../Utils/Utils';
 import axios from 'axios';
 import Store from '../../../Store/Store';
 import { apiBaseUrl } from "../../../Config/Config";
+import { leaveGroup } from '../../../Functions/ApiFunction';
 
 export default function ChatRoomInfo({ route, navigation }) {
 
@@ -27,6 +28,17 @@ export default function ChatRoomInfo({ route, navigation }) {
             console.log("chat usersss", res.data)
         }).catch((err) => { console.log(err) })
     }, [])
+
+    async function leave() {
+        const exitGroup = await leaveGroup(group_id)
+        if (exitGroup) {
+            navigation.pop()
+            navigation.pop()
+        }
+        else {
+            showNotification("Something went wrong")
+        }
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -62,7 +74,7 @@ export default function ChatRoomInfo({ route, navigation }) {
                         height: 38, justifyContent: "center", borderRadius: 10,
                         backgroundColor: "#404c59",
                     }}
-                        onPress={() => { console.log("leavecalled") }}>
+                        onPress={() => { leave() }}>
                         <Text style={{
                             color: "#ffffff", alignSelf: 'center', fontFamily: "WorkSans",
                             fontSize: 16, fontWeight: "normal", fontStyle: "normal",
