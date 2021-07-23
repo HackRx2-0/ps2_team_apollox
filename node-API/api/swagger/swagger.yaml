@@ -181,7 +181,7 @@ paths:
     x-swagger-router-controller: main_controller
     post:
       description: Leave group
-      operationId: joinGroup
+      operationId: leaveGroup
       security:
         - Bearer: []
       x-security-scopes:

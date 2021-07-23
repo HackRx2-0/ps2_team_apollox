@@ -4,8 +4,6 @@ const jwt = require("jsonwebtoken");
 const sharedSecret = require("../../config/config.json").secretString;
 
 exports.verifyToken = function (req, authOrSecDef, token, callback) {
-  console.log("verifying token in auth");
-  console.log(token);
   function sendError() {
     return req.res.status(403).json({
       message: "Error: Access Denied",
@@ -32,7 +30,7 @@ exports.verifyToken = function (req, authOrSecDef, token, callback) {
           return callback(sendError());
         }
       } else {
-        console.log("token verification error or role error");
+        console.log("verification error");
         console.log(verificationError);
         return callback(sendError());
       }

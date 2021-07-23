@@ -26,6 +26,17 @@ const io = socketIo(httpServer, {});
 
 const swaggerConfig = yaml.load(swagger);
 
+const redis = require("redis");
+const redisClient = redis.createClient({
+  host: "127.0.0.1",
+  port: 6379,
+  password: config.password,
+});
+
+redisClient.on("error", function (error) {
+  console.error(error);
+});
+
 app.use(cors());
 app.use(fileUpload());
 
@@ -39,6 +50,23 @@ function getCurrTime(isMongo) {
   if (!isMongo) return moment().format("YYYY-MM-DD hh:mm:ss");
   else return moment().toDate();
 }
+
+const chatCount = {};
+
+function startTimer() {
+  setInterval(() => {
+    for (let key in chatCount) {
+      if (chatCount[key] > 2) {
+        console.log("Call Some Api ML");
+        console.log(chatCount);
+        chatCount[key] = 0;
+      } else {
+        console.log("Time up message count not met");
+      }
+    }
+  }, 1000 * 30);
+}
+startTimer();
 
 // SOCKET --------------------------------------------------------------------------------------------------------------------
 // START---------------------------------------------------------------------------------------------------------------------
@@ -76,7 +104,6 @@ io.use((socket, next) => {
       next();
     }
   } catch (err) {
-    console.log("Io MW error")
     console.log(err);
     next(new Error("Error Occured"));
   }
@@ -117,7 +144,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("GRP_MSG", (payload, cb) => {
-    console.log("group message");
+    if (payload["group_id"] in chatCount) {
+      chatCount[payload.group_id] = chatCount[payload.group_id] + 1;
+    } else {
+      chatCount[payload.group_id] = 0;
+    }
+
+    console.log(chatCount);
+
     const chat = {
       ...payload,
       from: socket.user.uid,
@@ -189,4 +223,4 @@ swaggerTools.initializeMiddleware(swaggerConfig, (middleware) => {
   });
 });
 
-
+// 20.204.23.216
