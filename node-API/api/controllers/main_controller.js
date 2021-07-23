@@ -189,7 +189,7 @@ exports.leaveGroup = (req, res) => {
   let sql = `DELETE FROM user_group_mapping WHERE group_id = '${req.body.group_id}' AND user_id = '${req.auth.uid}'`;
   db.query(sql, (err, result) => {
     if (err) return send400(err, req, res, err.sqlMessage);
-    send200(req, res, { message: "User removed from group" });
+    send200(req, res, { message: "User removedd from group" });
   });
 };
 

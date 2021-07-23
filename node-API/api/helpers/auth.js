@@ -32,7 +32,7 @@ exports.verifyToken = function (req, authOrSecDef, token, callback) {
           return callback(sendError());
         }
       } else {
-        console.log("verification error");
+        console.log("token verification error or role error");
         console.log(verificationError);
         return callback(sendError());
       }
