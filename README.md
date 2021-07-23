@@ -21,5 +21,6 @@
  * uvicorn
  * fastapi
  * asyncio
- * ## Sentiment Analysis:- Azure Coginitive Service
+ * #### Sentiment Analysis:- Azure Coginitive Service
+ * #### Dataset Reference - https://www.kaggle.com/c/cprod1/data
 
