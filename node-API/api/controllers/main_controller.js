@@ -4,10 +4,13 @@ const db = require("../helpers/db");
 const getDbMongo = require("../helpers/dbMongo").getDbMongo;
 
 const moment = require("moment");
+const { ObjectId } = require("mongodb");
 const uuid = require("short-uuid");
 const auth = require("../helpers/auth");
 
 const sharp = require("sharp");
+
+const { addChatToDatabase } = require("../helpers/socket");
 
 const firebaseAdmin = require("firebase-admin");
 const firebaseKey = require("../../config/firebase_key.json");
@@ -17,8 +20,9 @@ firebaseAdmin.initializeApp({
 
 const { send200, send400 } = require("../helpers/response");
 
-function getCurrTime() {
-  return moment().format("YYYY-MM-DD hh:mm:ss");
+function getCurrTime(isMongo) {
+  if (!isMongo) return moment().format("YYYY-MM-DD hh:mm:ss");
+  else return moment().toDate();
 }
 
 exports.userLoginOtp = (req, res) => {
@@ -285,13 +289,35 @@ exports.getChatsForGroup = (req, res) => {
 
 exports.updateLatestProductRecommended = (req, res) => {
   const insertData = { ...req.body, createTime: getCurrTime(true) };
+  if (insertData.produrl[0] === "/") {
+    insertData.produrl = "https://www.bajajfinservmarkets.in" + insertData.produrl;
+  }
+
   console.log(insertData);
   getDbMongo()
     .collection("recommended_products")
     .insertOne(insertData, (err, result) => {
       if (err) send400(req, res, "Coult not");
       else {
+        const chat = {
+          group_id: insertData.group_id,
+          message: {
+            _id: result.insertedId,
+            text: `${insertData.prodname}::${insertData.produrl}`,
+            createdAt: new Date(),
+            image: insertData.prodimageurl,
+            user: {
+              _id: "sytemid",
+              name: "Recommended Product",
+              avatar:
+                "https://yt3.ggpht.com/ytc/AKedOLT9ZRKPvzhhrH0KH0ohT_7F0Bvpe4Rv7jY8extSWQ=s900-c-k-c0x00ffffff-no-rj",
+            },
+          },
+        };
+
         req.socketObject.emit("RECOMMEND_PRODUCT", { ...insertData, _id: result.insertedId });
+        req.socketObject.emit("GRP_MSG", chat);
+        addChatToDatabase(chat);
         send200(req, res, { message: "Recommeneded" });
       }
     });
@@ -299,29 +325,31 @@ exports.updateLatestProductRecommended = (req, res) => {
 
 exports.favoriteProduct = (req, res) => {
   const user_id = req.auth.uid;
-  const prod_id = req.body.prod_id;
+  const prod_id = req.body.product_id;
   const uid = uuid.generate().substr(0, 8);
+
+  console.log(req.body);
 
   let sql = `INSERT INTO user_prod_mapping (uid, user_id, prod_id) VALUES ('${uid}', '${user_id}', '${prod_id}')`;
   db.query(sql, (err, result) => {
-    if (err) return send400(err, req, res, eqq.sqlMessage);
+    if (err) return send400(err, req, res, err.sqlMessage);
 
     return send200(req, res, { result: "Added to favorites" });
   });
 };
 
 exports.getFavorites = (req, res) => {
-  let sql = `SELECT uid, prod_id FROM user_group_mapping WHERE user_id='${req.auth.uid}'`;
+  let sql = `SELECT uid, prod_id FROM user_prod_mapping WHERE user_id='${req.auth.uid}'`;
   db.query(sql, (err, result) => {
-    if (err) return send400(err, req, res, eqq.sqlMessage);
+    if (err) return send400(err, req, res, err.sqlMessage);
 
-    let arrProdIds = result.map((item) => ObjectID(item.prod_id));
+    let arrProdIds = result.map((item) => ObjectId(item.prod_id));
     getDbMongo()
       .collection("recommended_products")
       .find({ _id: { $in: arrProdIds } })
       .toArray((err, result) => {
         if (err) return send400(err, req, res, "MongoError");
-        return 200(req, res, result);
+        return send200(req, res, result);
       });
   });
 };
@@ -333,7 +361,8 @@ exports.addForumPost = (req, res) => {
     topic: req.body.topic,
     user_id: req.auth.uid,
     comments: [],
-    likes: 0,
+    upvotes: [],
+    downvotes: [],
   };
 
   getDbMongo()
@@ -352,4 +381,109 @@ exports.getAllFeeds = (req, res) => {
       if (err) return send400(err, req, res, "Could not get data");
       return send200(req, res, result);
     });
+};
+
+exports.voteFeed = (req, res) => {
+  const type = req.body.type;
+  const findData = { _id: ObjectId(req.body.forum_id) };
+  const updateData = {};
+  switch (type) {
+    case "up":
+      updateData.$addToSet = { upvotes: req.auth.uid };
+      break;
+    case "down":
+      updateData.$addToSet = { downvotes: req.auth.uid };
+  }
+
+  console.log(updateData);
+  console.log(findData);
+
+  getDbMongo()
+    .collection("forum_posts")
+    .updateOne(findData, updateData, (err, result) => {
+      if (err) return send400(err, res, res, "Could not");
+
+      console.log(result);
+      send200(req, res, { result: "done" });
+    });
+};
+
+exports.commentFeed = (req, res) => {
+  const findData = { _id: ObjectId(req.body.forum_id) };
+  const comment = {
+    comment_body: req.body.comment_body,
+    createTime: getCurrTime(true),
+    user_id: req.auth.uid,
+    user_name: req.body.user_name,
+  };
+  const updateData = { $push: { comments: comment } };
+  getDbMongo()
+    .collection("forum_posts")
+    .updateOne(findData, updateData, (err, result) => {
+      if (err) return send400(err, res, res, "Could not");
+
+      console.log(result);
+      send200(req, res, { result: "done" });
+    });
+};
+
+exports.addFriend = (req, res) => {
+  const findData = { user_id: req.auth.uid };
+  const updateData = {
+    $addToSet: { friend_ids_list: req.body.user_id, friend_name_list: req.body.user_name },
+  };
+
+  getDbMongo()
+    .collection("friends")
+    .updateOne(findData, updateData, { upsert: true }, (err, result) => {
+      if (err) return send400(err, res, res, "Could not");
+      send200(req, res, { result: "done" });
+    });
+};
+
+exports.getFriends = (req, res) => {
+  getDbMongo()
+    .collection("friends")
+    .find({ user_id: req.auth.uid })
+    .toArray((err, result) => {
+      if (err) return send400(err, res, res, "Could not");
+      send200(req, res, result);
+    });
+};
+
+exports.uploadForumImage = (req, res) => {
+  const unique = uuid.generate().substr(0, 5);
+  let image = req.files.image;
+  let name = `forum_${req.body.forum_id}_${unique}.jpeg`;
+  let path = `images/forum/${name}`;
+
+  if (!image) {
+    send500(err, req, res, "Could not find image");
+    return;
+  }
+
+  sharp(image.data)
+    .jpeg()
+    .toFile(`${__dirname}/../../${path}`, (err) => {
+      if (err) {
+        send400(err, req, res, "Could not upload image");
+        return;
+      }
+
+      getDbMongo()
+        .collection("forum_posts")
+        .updateOne(
+          { _id: ObjectId(req.body.forum_id) },
+          { $set: { imageUrl: path } },
+          (err, result) => {
+            if (err) return send400(err, req, res, "Could not");
+            return send200(req, res, { imageUrl: path, message: "Image Uploaded" });
+          }
+        );
+    });
+};
+
+exports.forumImageAccess = (req, res) => {
+  let name = req.swagger.params.name.value;
+  res.sendFile(name, { root: `images/forum/` });
 };

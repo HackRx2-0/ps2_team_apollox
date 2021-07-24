@@ -15,7 +15,11 @@ const initDb = require("./api/helpers/dbMongo").initDb;
 const auth = require("./api/helpers/auth");
 const handleError = require("./api/helpers/error").handleError;
 const swagger = fs.readFileSync("./api/swagger/swagger.yaml", "utf8");
-const { verifyToken, addChatToDatabase } = require("./api/helpers/socket");
+const {
+  verifyToken,
+  addChatToDatabase,
+  addChatToDatabasePrivate,
+} = require("./api/helpers/socket");
 const db = require("./api/helpers/db");
 
 const morgan = require("morgan");
@@ -54,6 +58,11 @@ function getCurrTime(isMongo) {
   else return moment().toDate();
 }
 
+app.use((req, res, next) => {
+  req.socketObject = io;
+  next();
+});
+
 const chatCount = {};
 
 function startTimer() {
@@ -63,7 +72,7 @@ function startTimer() {
         console.log("Call Some Api ML");
         console.log(chatCount);
 
-        const url = "http://20.204.120.208/predict";
+        const url = "http://40.80.89.206/predict";
         getDbMongo()
           .collection("group_chats")
           .find({ group_id: key })
@@ -73,17 +82,19 @@ function startTimer() {
             if (err) console.log("could not fetch docs from chats");
             else {
               chatCount[key] = 0;
-              result = result.map((item) => item.message.text);
-              console.log({ conversarions: result });
-              // axios
-              //   .post(url, { conversations: result })
-              //   .then((resp) => {
-              //     console.log("got data");
-              //   })
-              //   .catch((err) => {
-              //     console.log("--------------------------------");
-              //     console.log(err);
-              //   });
+              let postData = { conversations: [], group_id: key };
+              postData.conversations = result.map((item) => item.message.text);
+              console.log({ postData });
+              axios
+                .post(url, postData)
+                .then((resp) => {
+                  console.log("got data");
+                  console.log(resp.data);
+                })
+                .catch((err) => {
+                  console.log("--------------------------------");
+                  console.log(err);
+                });
             }
           });
       } else {
@@ -96,19 +107,6 @@ startTimer();
 
 // SOCKET --------------------------------------------------------------------------------------------------------------------
 // START---------------------------------------------------------------------------------------------------------------------
-
-app.post("recommendation/product/carousel", (req, res) => {
-  console.log(req.body);
-  getDbMongo()
-    .collection("recommended_products")
-    .updateOne(req.body, (err, result) => {
-      if (err) send400(req, res, "Coult not");
-      else {
-        io.emit("RECOMMENT_PRODUCT", req.body);
-        send200(req, res, { message: "Recommeneded" });
-      }
-    });
-});
 
 const userSocketMap = {};
 const userRoomMap = {};
@@ -154,12 +152,14 @@ io.on("connection", (socket) => {
   // Send private message
   socket.on("PVT_MSG", (payload, cb) => {
     const chat = {
+      ...payload,
       from: socket.user.uid,
-      to: payload.to,
-      message: payload.message,
-      create_time: getCurrTime(true),
+      createdAt: getCurrTime(true),
     };
+
+    console.log("private messagin");
     console.log(chat);
+    addChatToDatabasePrivate(chat);
     socket.to(userRoomMap[payload.to]).emit("PVT_MSG", chat);
     cb({ status: "OK" });
   });
@@ -186,7 +186,7 @@ io.on("connection", (socket) => {
     if (payload["group_id"] in chatCount) {
       chatCount[payload.group_id] = chatCount[payload.group_id] + 1;
     } else {
-      chatCount[payload.group_id] = 0;
+      chatCount[payload.group_id] = 1;
     }
 
     console.log(chatCount);

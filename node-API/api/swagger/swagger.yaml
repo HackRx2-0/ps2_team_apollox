@@ -74,13 +74,33 @@ paths:
             $ref: "#/definitions/Message"
 
   /user/favorites/products:
+    x-swagger-router-controller: main_controller
     get:
       security:
         - Bearer: []
       x-security-scopes:
         - user
       description: Get list of groups
-      operationId: getAllGroups
+      operationId: getFavorites
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/ArrayGroups"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
+  /user/friends:
+    x-swagger-router-controller: main_controller
+    get:
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      description: Get list of friends
+      operationId: getFriends
       responses:
         "200":
           description: Success
@@ -419,6 +439,142 @@ paths:
             $ref: "#/definitions/ArrayGroups"
         default:
           description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
+  /forum/post/vote:
+    x-swagger-router-controller: main_controller
+    post:
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      operationId: voteFeed
+      description: vote type 'up' or 'down'
+      parameters:
+        - name: feedVote
+          in: body
+          schema:
+            properties:
+              forum_id:
+                type: string
+              type:
+                type: string
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
+
+  /forum/comment:
+    x-swagger-router-controller: main_controller
+    post:
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      operationId: commentFeed
+      description: comment kar do
+      parameters:
+        - name: commentFeed
+          in: body
+          schema:
+            properties:
+              forum_id:
+                type: string
+              comment_body:
+                type: string
+              user_name:
+                type: string
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
+
+  /forum/image:
+    x-swagger-router-controller: main_controller
+    post:
+      description: Upload image for forum
+      operationId: uploadForumImage
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: image
+          in: formData
+          required: true
+          type: file
+        - name: forum_id
+          in: formData
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/Message"
+
+  /images/forum/{name}:
+    x-swagger-router-controller: main_controller
+    get:
+      operationId: forumImageAccess
+      description: Get uploaded image as file. Path from db
+      parameters:
+        - name: name
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "Image"
+          schema:
+            type: file
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Message"
+
+  /friend:
+    x-swagger-router-controller: main_controller
+    post:
+      security:
+        - Bearer: []
+      x-security-scopes:
+        - user
+      operationId: addFriend
+      description: friend add kr lo friends
+      parameters:
+        - name: commentFeed
+          in: body
+          schema:
+            properties:
+              user_id:
+                type: string
+              user_name:
+                type: string
+      responses:
+        "200":
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Message"
+        default:
+          description: "Error"
           schema:
             $ref: "#/definitions/Message"
 
