@@ -46,7 +46,7 @@
 
 ### .apk File
 Hi, 
-here's our app APK : [https://drive.google.com/file/d/19XUmXggOtMwB3e7g6FyhxwlhRA7MLr_b/view?usp=sharing]
+here's our app APK : [Download Here](https://drive.google.com/file/d/19XUmXggOtMwB3e7g6FyhxwlhRA7MLr_b/view?usp=sharing)
 just to mention, there might be some bugs in functionality.
 Please test the ChatRooms features & send multiple messages regarding the brands or phones.
 
