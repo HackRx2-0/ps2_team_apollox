@@ -24,3 +24,23 @@
  * #### Sentiment Analysis:- Azure Coginitive Service
  * #### Dataset Reference - https://www.kaggle.com/c/cprod1/data
 
+### NodeJS API
+ * express
+ * socket.io
+ * swagger-express-mw
+ * swagger-tools
+ * axios
+ * sharp
+ * mysql
+ * mongodb
+ * uuid
+ 
+### Mobile Application
+* React Native
+* socket.io client
+* axios
+* react-native-gifted-chats
+* mobX
+* Firebase
+
+
