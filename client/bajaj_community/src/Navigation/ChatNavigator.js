@@ -36,7 +36,9 @@ export function ChatRoomScreen() {
                 options={{ headerShown: false }}
                 component={ChatRoomInfo} />
 
-            <Stack.Screen name="Web" component={showWeb} />
+            <Stack.Screen name="Web"
+                options={{ headerTitle: "Product Info" }}
+                component={showWeb} />
 
 
 

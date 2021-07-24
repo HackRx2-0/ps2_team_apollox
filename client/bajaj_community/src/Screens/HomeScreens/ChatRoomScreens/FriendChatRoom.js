@@ -3,9 +3,11 @@ import { Button, Text, View, TouchableOpacity, Image } from 'react-native';
 import io from "socket.io-client";
 import Store from '../../../Store/Store';
 import uuid from "react-native-uuid"
-import Icon from "react-native-vector-icons/Entypo"
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
+import Icon from "react-native-vector-icons/Entypo"
+import Ionicons from "react-native-vector-icons/Ionicons"
+import Feather from "react-native-vector-icons/Feather"
 
 import { GiftedChat, Actions, ActionsProps, Send, Composer, InputToolbar, Bubble, BubbleProps } from 'react-native-gifted-chat'
 import axios from 'axios';
@@ -14,6 +16,7 @@ import { customSize, height, width } from '../../../Utils/Utils';
 
 export default function FriendChatScreen({ route, navigation }) {
     const { user, socket } = route.params;
+    console.log(user)
 
     const TOKEN = Store.authToken
     // "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI5aVYzWldFUSIsIm5hbWUiOiJOYW1lIER1bW15IiwiZW1haWxfaWQiOiJhQGdtYWlsLmNvbSIsInBob25lX25vIjoiKzkxODEwMjY0NDM2NiIsInJvbGUiOiJ1c2VyIiwiaXNzIjoiQ3VyZS1NYWpvclByb2plY3QiLCJpYXQiOjE2MjY5NTc3NzUsImV4cCI6MTYyNzA0NDE3NX0.MlsIMMgsIE9l3wcDVF77z6KD4hZC30kraOuHeIpiDZY"
@@ -26,21 +29,6 @@ export default function FriendChatScreen({ route, navigation }) {
 
     const [filePath, setFilePath] = useState(null);
 
-
-    // useEffect(() => {
-
-    //     const newSocket = io("https://www.api.apollox.atifhossain.me", {
-    //         auth: {
-    //             token: `Bearer ${TOKEN}`
-    //         },
-    //     });
-    //     console.log(newSocket)
-    //     setSocket(newSocket)
-
-
-
-    //     return () => { newSocket.close() }
-    // }, [])
     useEffect(() => {
 
         console.log("USEFECECT 2")
@@ -78,7 +66,62 @@ export default function FriendChatScreen({ route, navigation }) {
         }
     }, [socket])
 
+    function CustomHeader() {
+        return (
+            <View style={{ width: width, height: height / 14, backgroundColor: "#303d4b" }}>
+                <View style={{
+                    flexDirection: "row", flex: 1, justifyContent: "space-between",
+                    alignItems: "center",
+                    marginLeft: "4%",
+                    marginRight: "4%",
 
+
+                }}>
+                    <View style={{
+                        width: 38,
+                        height: 38,
+                        justifyContent: "center",
+                        borderRadius: 10,
+                        backgroundColor: "#404c59",
+                    }}>
+                        <Ionicons
+                            name={"arrow-back"}
+                            size={25}
+                            color={"#ffffff"}
+                            style={{ alignSelf: "center" }}
+                            onPress={() => {
+                                navigation.goBack()
+                            }}
+                        />
+                    </View>
+                    <Text
+                        style={{ fontSize: customSize(16), color: "#ffffff", fontFamily: "Inter-SemiBold" }}
+                    >
+                        {user.name}
+                    </Text>
+                    <View style={{
+                        width: 38,
+                        height: 38,
+                        justifyContent: "center",
+                        borderRadius: 10,
+                        backgroundColor: "#404c59",
+                    }}>
+                        <Feather
+                            name={"more-vertical"}
+                            size={24}
+                            color={"#ffffff"}
+                            style={{ alignSelf: "center" }}
+                            onPress={() => {
+
+                                // navigation.navigate("ChatRoomInfo", { name, group_id })
+                                console.log("I pressed")
+                            }}
+                        />
+                    </View>
+                </View>
+            </View>
+        )
+    }
 
     function fireMessage() {
         console.log("FIRED", socket)
@@ -413,47 +456,7 @@ export default function FriendChatScreen({ route, navigation }) {
 
     return (
         <View style={{ flex: 1 }}>
-            <View style={{
-                height: height / 5, width: width,
-                backgroundColor: "#d6f1e9",
-                opacity: 1
-            }}>
-                <View style={{
-                    flexDirection: "row", flex: 1, justifyContent: "space-between",
-                    marginLeft: "5%", marginRight: "8%",
-                    marginTop: "4%",
-
-                }}>
-                    <Text
-                        style={{
-                            color: "#555555",
-                            fontFamily: "Inter-Regular",
-                            fontSize: customSize(12),
-
-                        }}
-                    >
-                        Product recommendations for you
-                    </Text>
-                    <Text
-                        style={{
-                            color: "#555555",
-                            fontFamily: "Inter-Bold",
-                            fontSize: customSize(12)
-                        }}
-                    >
-                        HIDE
-                    </Text>
-                </View>
-                <View style={{
-                    height: height / 8, width: width - 50,
-                    backgroundColor: "#ffffff",
-                    opacity: 1, alignSelf: "center",
-                    marginBottom: 18,
-                    borderRadius: 10,
-                }}>
-
-                </View>
-            </View>
+            <CustomHeader />
             <View style={{ flex: 1 }}>
                 <GiftedChat
                     messages={messages}

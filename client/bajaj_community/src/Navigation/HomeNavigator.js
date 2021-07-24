@@ -2,11 +2,13 @@ import * as React from 'react';
 import { Text, View, TouchableOpacity, Image, StyleSheet, Pressable } from 'react-native';
 import { getFocusedRouteNameFromRoute, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import DiscussionScreen from "../Screens/HomeScreens/DiscussionsScreen";
 import FriendsScreen from "../Screens/HomeScreens/Friends";
-import AccountScreen from "../Screens/HomeScreens/AccountScreen/Account";
 
 import { ChatRoomScreen } from './ChatNavigator';
+
+
+import DiscussionRoomScreen from "./DiscussionNavigator";
+import AccountScreen from "./AccountsNavigator";
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { customSize } from '../Utils/Utils';
@@ -103,11 +105,24 @@ export function HomeScreens() {
             tabBarOptions={{
                 tabStyle: {
                     height: 100
-                }
+                },
+
             }}
             backBehavior={"initialRoute"}
         >
-            <Tab.Screen name="Discussion" component={DiscussionScreen} />
+            <Tab.Screen name="Discussion" component={DiscussionRoomScreen}
+                options={({ route }) => ({
+                    tabBarVisible: ((route) => {
+                        const routeName = getFocusedRouteNameFromRoute(route) ?? ""
+                        console.log(routeName)
+                        if (routeName === "AddFeed" || routeName === 'FeedComment') {
+                            return false
+                        }
+
+                        return true
+                    })(route),
+                })}
+            />
             <Tab.Screen name="ChatRoom" component={ChatRoomScreen}
 
                 options={({ route }) => ({

@@ -56,22 +56,24 @@ function App() {
 
   async function getUserDetails() {
     const authTokenServer = await getData('authTokenServer')
-    axios.get(`${apiBaseUrl}/user`, {
-      headers: {
-        "Authorization": `Bearer ${authTokenServer}`
-      }
-    }).then((res) => {
-      console.log("USER DATA", res.data)
-      Store.setUserUid(res.data.uid)
-      Store.setUserName(res.data.name)
+    if (authTokenServer) {
+      axios.get(`${apiBaseUrl}/user`, {
+        headers: {
+          "Authorization": `Bearer ${authTokenServer}`
+        }
+      }).then((res) => {
+        console.log("USER DATA", res.data)
+        Store.setUserUid(res.data.uid)
+        Store.setUserName(res.data.name)
 
 
-      // setRoomsData(res.data)
-      // setLoading(false)
-    }).catch((err) => {
-      console.log(err)
+        // setRoomsData(res.data)
+        // setLoading(false)
+      }).catch((err) => {
+        console.log(err)
 
-    })
+      })
+    }
   }
 
   function onAuthStateChanged(user) {
@@ -84,7 +86,6 @@ function App() {
   //authstate 1 = otp success but email not given
   //authstate 2 = email success but phone not given
   //authstate 3 = both Success
-  console.log("authdatat before APP>JS", Store.authState)
   return (
     <Observer>
       {() => (

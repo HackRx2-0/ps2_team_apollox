@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Button, FlatList, Text, View, TouchableOpacity, Image, LogBox, Pressable, Modal, Linking } from 'react-native';
+import { Button, Alert, FlatList, Text, View, TouchableOpacity, Image, LogBox, Pressable, ActivityIndicator, Modal, Linking } from 'react-native';
 import io from "socket.io-client";
 import Store from '../../../Store/Store';
 import uuid from "react-native-uuid"
 import Icon from "react-native-vector-icons/Entypo"
 import Ionicons from "react-native-vector-icons/Ionicons"
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"
+import FontAwesome from "react-native-vector-icons/FontAwesome"
+
 
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
@@ -13,8 +15,7 @@ import ImageView from "react-native-image-viewing";
 import { GiftedChat, Actions, ActionsProps, Send, MessageImage, Composer, InputToolbar, Bubble, BubbleProps } from 'react-native-gifted-chat'
 import axios from 'axios';
 import { apiBaseUrl } from '../../../Config/Config';
-import { customSize, height, width } from '../../../Utils/Utils';
-import { showWeb } from "../../../Functions/AppFunctions"
+import { customSize, height, showNotification, width } from '../../../Utils/Utils';
 import { Observer } from 'mobx-react';
 
 export default function ChatScreen({ route, navigation }) {
@@ -31,24 +32,10 @@ export default function ChatScreen({ route, navigation }) {
     const [unqid, setunqid] = useState(null)
 
     const [filePath, setFilePath] = useState(null);
-    const [modalVisible, setModalVisible] = useState(false)
+    const [msgLoading, setMsgLoading] = useState(true)
 
+    const [recommendedProductsArray, setRecommendedProductsArray] = useState([]);
 
-
-    // useEffect(() => {
-
-    //     const newSocket = io("https://www.api.apollox.atifhossain.me", {
-    //         auth: {
-    //             token: `Bearer ${TOKEN}`
-    //         },
-    //     });
-    //     console.log(newSocket)
-    //     setSocket(newSocket)
-
-
-
-    //     return () => { newSocket.close() }
-    // }, [])
     useEffect(() => {
         LogBox.ignoreLogs([
             'Non-serializable values were found in the navigation state',
@@ -57,13 +44,47 @@ export default function ChatScreen({ route, navigation }) {
             "Animated.event now requires a second argument for options"
         ])
         LogBox.ignoreLogs(['Warning: ...']);
-        console.log("USEFECECT 2")
-        console.log(Store.user_uid)
-        console.log(Store.user_name)
+        // console.log("USEFECECT 2")
+        // console.log(Store.user_uid)
+        // console.log(Store.user_name)
         getOldChats(group_id)
+        axios.get(`${apiBaseUrl}/recommendation/products/latest/${group_id}`, {
+            headers: {
+                "Authorization": `Bearer ${Store.authToken}`
+            }
+        },
+        ).then((res) => {
+            console.log("FROM SERVER", res.data)
+            setRecommendedProductsArray(res.data)
+
+
+        }).catch((err) => {
+            console.log(err)
+        })
+
         if (socket != null) {
+            console.log("INSIDE SOCKET")
             socket.on("connect", (res) => {
                 console.log("CONNECTED", socket.id)
+            })
+            socket.on("RECOMMEND_PRODUCT", (res) => {
+
+                if (res) {
+                    axios.get(`${apiBaseUrl}/recommendation/products/latest/${group_id}`, {
+                        headers: {
+                            "Authorization": `Bearer ${Store.authToken}`
+                        }
+                    },
+                    ).then((res) => {
+                        console.log("FROM SERVER", res)
+
+                        setRecommendedProductsArray(res.data)
+                    }).catch((err) => {
+                        console.log(err)
+                    })
+                }
+                // setRecommendedProductsArray((prev) => [res, ...prev])
+                // console.log("RECOMMENDED PRODUCT", res)
             })
             socket.on("GRP_MSG", (msg) => {
 
@@ -98,11 +119,11 @@ export default function ChatScreen({ route, navigation }) {
                 "Authorization": `Bearer ${Store.authToken}`
             }
         }).then((res) => {
-            console.log("all rooms", res.data)
+            // console.log("all rooms", res.data)
             // setMessages(previousState => GiftedChat.append(previousState, res.data));
             var mes = [];
             for (let i = res.data.length - 1; i >= 0; i--) {
-                console.log(res.data[i])
+                // console.log(res.data[i])
                 const newMessage = {
                     _id: res.data[i].message._id,
                     text: res.data[i].message.text,
@@ -117,6 +138,7 @@ export default function ChatScreen({ route, navigation }) {
                 mes.push(newMessage)
             }
             setMessages(mes)
+            setMsgLoading(false)
 
         }).catch((err) => {
             console.log(err)
@@ -246,16 +268,7 @@ export default function ChatScreen({ route, navigation }) {
 
     }
     function renderMessageImage(props) {
-        console.log(props.currentMessage.image)
-        const renderCarousel = () => (
 
-            <Image
-                style={{ flex: 1 }}
-                resizeMode="contain"
-                source={{ uri: "https://www.yayomg.com/wp-content/uploads/2014/04/yayomg-pig-wearing-party-hat.jpg" }}
-            />
-
-        )
         return (
             <MessageImage
                 imageStyle={{ borderRadius: 5 }}
@@ -264,39 +277,10 @@ export default function ChatScreen({ route, navigation }) {
                 {...props}
 
             />
-            // <Pressable
-            //     onPress={() => {
-            //         setModalVisible(true)
-            //     }}
-            // >
-            //     <Image
-            //         source={{ uri: props.currentMessage?.image }}
-            //         style={{ height: 150, width: 200, resizeMode: "contain" }}
-            //         onPres
-            //     />
-            //     <Modal
-            //         visible={modalVisible}
-            //         transparent={false}
-            //         onRequestClose={() => setModalVisible(false)}
-            //     >
-            //         <Image
-            //             source={{ uri: props.currentMessage.image }}
-            //             style={{ height: "50%", width: "100%" }}
-            //         />
-            //     </Modal>
-            // </Pressable>
+
         )
     }
-    // function renderMessageImage(props) {
 
-    //     console.log(props)
-    //     return (
-    //         <MessageImage
-    //             {...props}
-
-    //         // imageProps={{ defaultSource: require('../../Images/bg_image.jpg') }}
-    //         />)
-    // }
     function renderComposer(props) {
 
         return (
@@ -508,10 +492,30 @@ export default function ChatScreen({ route, navigation }) {
 
 
     }, [])
-    function renderItemProducts({ item }) {
+    function addToFavourites(product_id) {
+        console.log("PRODUCT ID", product_id)
+        axios.post(`${apiBaseUrl}/recommendation/product/favorite`, {
+            product_id: product_id
+        }, {
+            headers: {
+                "Authorization": `Bearer ${Store.authToken}`
+            }
+        },
+        ).then((res) => {
+            console.log("FROM SERVER LIKES", res.data)
+            showNotification("Product added to favorites")
+            // setRecommendedProductsArray(res.data)
+
+
+        }).catch((err) => {
+            showNotification("Product has already been added")
+            console.log(err)
+        })
+    }
+    function renderItemProducts({ item, index }) {
         return (
             <View style={{
-                height: height / 7.4, width: width - 55,
+                height: height / 7, width: width - 55,
                 backgroundColor: "#ffffff",
                 justifyContent: "center",
                 marginLeft: 25,
@@ -522,36 +526,66 @@ export default function ChatScreen({ route, navigation }) {
             }}>
                 <View style={{ flexDirection: "row", flex: 1 }}>
                     <Image
-                        source={item.image}
-                        style={{ height: height / 10, width: width / 4, resizeMode: "contain" }}
+                        source={{ uri: item.prodimageurl }}
+                        style={{
+                            height: height / 10, width: width / 4,
+                            resizeMode: "contain",
+                            marginLeft: 10, marginTop: 10
+                        }}
                     />
-                    <View style={{ flex: 1, paddingLeft: 20, paddingTop: 20 }}>
+
+                    <View style={{ flex: 1, paddingLeft: 10, paddingTop: 5 }}>
                         <Text style={{
-                            fontFamily: "Inter-SemiBold"
+                            alignSelf: "flex-end", marginTop: -4, marginRight: 12
                         }}>
-                            {item.name}
+                            {`${index + 1}/${recommendedProductsArray.length}`}
                         </Text>
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginRight: 20, marginTop: 10 }}>
+                        <Text style={{
+                            fontFamily: "Inter-SemiBold",
+                            marginTop: 5,
+
+                            paddingRight: 5
+
+                        }}
+                            numberOfLines={2}
+                        >
+                            {item.prodname}
+                        </Text>
+                        <View style={{
+                            flexDirection: "row", justifyContent: "space-between",
+                            marginRight: 20, marginTop: 5
+                        }}>
                             <Text style={{
                                 fontFamily: "Inter-Bold",
                                 fontSize: customSize(14),
                                 marginTop: "4%",
 
                             }}>
-                                {item.price}
+                                ₹{item.prodprice}
                             </Text>
+                            <Pressable style={{ marginTop: "4%" }}>
+                                <FontAwesome
+                                    name={"star"}
+                                    size={20}
+                                    onPress={() => {
 
+                                        addToFavourites(item._id)
+
+                                    }}
+                                />
+                            </Pressable>
                             <Pressable
                                 style={{
                                     width: 80,
-                                    height: "80%",
+                                    height: "70%",
                                     borderRadius: 5,
+                                    marginTop: 1.5,
                                     backgroundColor: "#0bbc8a",
                                     justifyContent: "center",
                                     alignItems: "center",
                                 }}
                                 onPress={() => {
-                                    alert("ON PRESS")
+                                    navigation.navigate("Web", { link: item.produrl })
                                 }}
                             >
                                 <Text
@@ -568,7 +602,9 @@ export default function ChatScreen({ route, navigation }) {
                             </Pressable>
 
                         </View>
+
                     </View>
+
 
                 </View>
 
@@ -576,21 +612,8 @@ export default function ChatScreen({ route, navigation }) {
         )
     }
     function RecommendationCard(props) {
-        const { productName, productPrice } = props;
+        console.log("RECOMMENDED ARRAY STATE", recommendedProductsArray)
 
-        const data = [{
-            name: "New Apple iPhone 12 Mini (64GB) -(Product) RED",
-            price: "₹54,900",
-            id: "1",
-            image: require("../../../Images/product.jpg")
-        },
-        {
-            name: "Mi 11X Pro 5G (Cosmic Black 128GB Storage) 108MP Camera",
-            price: "38,900",
-            id: "2",
-            image: require("../../../Images/Mi11.jpg")
-        }
-        ]
 
         return (
             <View style={{
@@ -628,19 +651,23 @@ export default function ChatScreen({ route, navigation }) {
                         HIDE
                     </Text>
                 </View>
-                <FlatList
-                    data={data}
-                    pagingEnabled={true}
-                    horizontal={true}
-                    renderItem={renderItemProducts}
-                    keyExtractor={item => item.id}
-                // showsHorizontalScrollIndicator={false}
+                <View>
+                    <FlatList
+                        data={recommendedProductsArray}
+                        pagingEnabled={true}
+                        // inverted={true}
+
+                        horizontal={true}
+                        renderItem={renderItemProducts}
+                        keyExtractor={item => item._id}
+                    // showsHorizontalScrollIndicator={false}
 
 
 
 
-                />
+                    />
 
+                </View>
             </View>
         )
     }
@@ -650,102 +677,128 @@ export default function ChatScreen({ route, navigation }) {
             <CustomHeader />
             <Observer>{
                 () => (
-                    Store.recommendation_Card ? <RecommendationCard
-                        productName={"New Apple iPhone 12 Mini (64GB) -(Product) RED"}
-                        productPrice={"₹54,900"}
-
-                    /> :
-                        <View style={{
-                            height: 50, width: width,
-                            backgroundColor: "#d6f1e9",
-                            opacity: 1, zIndex: 1000
-                        }}>
+                    recommendedProductsArray.length > 0 ?
+                        Store.recommendation_Card ? <RecommendationCard /> :
                             <View style={{
-                                flexDirection: "row", flex: 1, justifyContent: "space-between",
-                                marginLeft: "5%", marginRight: "8%",
-                                marginTop: "2.8%",
-
+                                height: 50, width: width,
+                                backgroundColor: "#d6f1e9",
+                                opacity: 1, zIndex: 1000
                             }}>
-                                <Text
-                                    style={{
-                                        color: "#555555",
-                                        fontFamily: "Inter-Regular",
-                                        fontSize: customSize(12),
+                                <View style={{
+                                    flexDirection: "row", flex: 1, justifyContent: "space-between",
+                                    marginLeft: "5%", marginRight: "8%",
+                                    marginTop: "2.8%",
 
-                                    }}
-                                >
-                                    Product recommendations for you
-                                </Text>
-                                <Text
-                                    style={{
-                                        color: "#555555",
-                                        fontFamily: "Inter-Bold",
-                                        fontSize: customSize(12)
-                                    }}
-                                    onPress={() => {
-                                        console.log("PRESSED")
-                                        Store.setRecommendationCard(true)
-                                    }}
-                                >
-                                    SHOW
-                                </Text>
-                            </View>
+                                }}>
+                                    <Text
+                                        style={{
+                                            color: "#555555",
+                                            fontFamily: "Inter-Regular",
+                                            fontSize: customSize(12),
+
+                                        }}
+                                    >
+                                        Product recommendations for you
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            color: "#555555",
+                                            fontFamily: "Inter-Bold",
+                                            fontSize: customSize(12)
+                                        }}
+                                        onPress={() => {
+                                            console.log("PRESSED")
+                                            Store.setRecommendationCard(true)
+                                        }}
+                                    >
+                                        SHOW
+                                    </Text>
+                                </View>
 
 
-                        </View>
+                            </View> : null
                 )
             }</Observer>
-            <View style={{ flex: 1 }}>
-                <GiftedChat
-                    messages={messages}
-                    onSend={messages => onSend(messages, { image: filePath })}
-                    // onSend={messages => onSend(messages, { image: filePath })}
+            {msgLoading ?
+                <View style={{ flex: 1, justifyContent: "center", alignSelf: "center" }}>
 
-                    user={{
-                        _id: Store.user_uid,
-                        name: Store.user_name,
-                        avatar: 'https://placeimg.com/140/140',
-                    }}
-                    renderUsernameOnMessage={true}
-                    showAvatarForEveryMessage
-                    renderComposer={renderComposer}
-                    renderActions={renderActions}
-                    messagesContainerStyle={{
-                        paddingBottom: filePath ? 100 : "5%"
 
-                    }}
-                    onPressAvatar={(user) => {
-                        navigation.navigate("FriendChatRoom", { user: user, socket: socket })
-                    }}
-                    // renderSend={renderSend}
-                    renderBubble={BubbleChat}
-                    alwaysShowSend
-                    renderAvatarOnTop
+                    <ActivityIndicator
+                        color='#1d6ff2'
+                        size={48}
+                        animating={msgLoading}
+                    />
 
-                    renderMessageImage={
-                        renderMessageImage
-                    }
-                    renderInputToolbar={customtInputToolbar}
-                    renderSend={renderSend}
-                    parsePatterns={(item) => [
-                        {
-                            type: "url",
-                            style: {
-                                textDecorationLine: "underline",
-                                color:
-                                    item && item[0].color === "black"
-                                        ? "red"
-                                        : "blue"
-                            },
-                            onPress: async (res) => {
-                                console.log("rES", res)
-                                navigation.navigate("Web", { link: res })
-                            }
+
+                </View> :
+                <View style={{ flex: 1 }}>
+                    <GiftedChat
+                        messages={messages}
+
+                        onSend={messages => onSend(messages, { image: filePath })}
+                        // onSend={messages => onSend(messages, { image: filePath })}
+
+                        user={{
+                            _id: Store.user_uid,
+                            name: Store.user_name,
+                            avatar: 'https://placeimg.com/140/140',
+                        }}
+                        renderUsernameOnMessage={true}
+                        showAvatarForEveryMessage
+                        renderComposer={renderComposer}
+                        renderActions={renderActions}
+                        messagesContainerStyle={{
+                            paddingBottom: filePath ? 100 : "5%"
+
+                        }}
+                        onPressAvatar={(user) => {
+                            Alert.alert(
+                                "",
+                                `Do you want to chat with ${user.name}`,
+                                [
+                                    {
+                                        text: "Cancel",
+                                        onPress: () => showNotification("Action Cancelled"),
+                                        style: "cancel"
+                                    },
+                                    {
+                                        text: "OK", onPress: () => {
+                                            navigation.navigate("FriendChatRoom", { user: user, socket: socket })
+                                        }
+                                    }
+                                ]
+                            );
+
+                        }}
+                        // renderSend={renderSend}
+                        renderBubble={BubbleChat}
+                        alwaysShowSend
+                        renderAvatarOnTop
+
+                        renderMessageImage={
+                            renderMessageImage
                         }
+                        renderInputToolbar={customtInputToolbar}
+                        renderSend={renderSend}
+                        parsePatterns={(item) => [
+                            {
+                                type: "url",
+                                style: {
+                                    textDecorationLine: "underline",
+                                    color:
+                                        item && item[0].color === "black"
+                                            ? "#18a0fb"
+                                            : "white"
+                                },
+                                onPress: async (res) => {
+                                    console.log("rES", res)
+                                    navigation.navigate("Web", { link: res })
+                                }
+                            }
 
-                    ]}
-                />
-            </View>
+                        ]}
+                    />
+                </View>}
 
         </View>
     );

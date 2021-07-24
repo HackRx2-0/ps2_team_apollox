@@ -5,6 +5,7 @@ class Store {
     user_uid = "";
     user_name = "";
     recommendation_Card = true;
+    recommended_Product = "";
 
     constructor() {
         makeAutoObservable(this);
@@ -23,6 +24,9 @@ class Store {
     }
     setRecommendationCard(val) {
         this.recommendation_Card = val;
+    }
+    setRecommendedProductVal(val) {
+        this.recommended_Product = val;
     }
 
 }
