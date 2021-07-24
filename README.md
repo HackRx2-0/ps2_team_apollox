@@ -35,6 +35,12 @@
  * mongodb
  * uuid
  
-
+### Mobile Application
+* React Native
+* socket.io client
+* axios
+* react-native-gifted-chats
+* mobX
+* Firebase
 
 
