@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useState, useCallback } from 'react';
 import { Text, View, TouchableOpacity, Image, TextInput, Pressable, ScrollView } from 'react-native';
 import { required } from 'yargs';
@@ -358,5 +359,15 @@ export default function AddFeed({ navigation }) {
             </Pressable>
 
         </ScrollView>
+=======
+import * as React from 'react';
+import { Text, View } from 'react-native';
+
+export default function AddFeed() {
+    return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text>Add Feed!</Text>
+        </View>
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
     );
 }

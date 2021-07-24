@@ -8,8 +8,11 @@ import { ChatRoomScreen } from './ChatNavigator';
 
 
 import DiscussionRoomScreen from "./DiscussionNavigator";
+<<<<<<< HEAD
 import AccountScreen from "./AccountsNavigator";
 
+=======
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { customSize } from '../Utils/Utils';
 
@@ -110,6 +113,7 @@ export function HomeScreens() {
             }}
             backBehavior={"initialRoute"}
         >
+<<<<<<< HEAD
             <Tab.Screen name="Discussion" component={DiscussionRoomScreen}
                 options={({ route }) => ({
                     tabBarVisible: ((route) => {
@@ -123,6 +127,9 @@ export function HomeScreens() {
                     })(route),
                 })}
             />
+=======
+            <Tab.Screen name="Discussion" component={DiscussionRoomScreen} />
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
             <Tab.Screen name="ChatRoom" component={ChatRoomScreen}
 
                 options={({ route }) => ({

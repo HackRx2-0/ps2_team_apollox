@@ -1,0 +1,14 @@
+uvicorn==0.14.0
+spacy==3.1.0
+spacy-legacy==3.0.8
+nltk==3.6.2
+nest-asyncio==1.5.1
+async-generator==1.10
+async-timeout==3.0.1
+beautifulsoup4==4.9.3
+fastapi==0.66.1
+pandas==1.2.4
+requests==2.25.1
+requests-html==0.10.0
+pydantic==1.7.4
+azure-ai-textanalytics==5.1.0

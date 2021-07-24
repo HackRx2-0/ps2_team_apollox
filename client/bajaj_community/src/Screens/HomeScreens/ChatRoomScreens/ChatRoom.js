@@ -1,5 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
+<<<<<<< HEAD
 import { Button, Alert, FlatList, Text, View, TouchableOpacity, Image, LogBox, Pressable, ActivityIndicator, Modal, Linking } from 'react-native';
+=======
+import { Button, FlatList, Text, View, TouchableOpacity, Image, LogBox, Pressable, ActivityIndicator, Modal, Linking } from 'react-native';
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
 import io from "socket.io-client";
 import Store from '../../../Store/Store';
 import uuid from "react-native-uuid"
@@ -33,6 +37,13 @@ export default function ChatScreen({ route, navigation }) {
 
     const [filePath, setFilePath] = useState(null);
     const [msgLoading, setMsgLoading] = useState(true)
+<<<<<<< HEAD
+=======
+
+
+
+    // useEffect(() => {
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
 
     const [recommendedProductsArray, setRecommendedProductsArray] = useState([]);
 
@@ -48,6 +59,7 @@ export default function ChatScreen({ route, navigation }) {
         // console.log(Store.user_uid)
         // console.log(Store.user_name)
         getOldChats(group_id)
+<<<<<<< HEAD
         axios.get(`${apiBaseUrl}/recommendation/products/latest/${group_id}`, {
             headers: {
                 "Authorization": `Bearer ${Store.authToken}`
@@ -61,6 +73,8 @@ export default function ChatScreen({ route, navigation }) {
         }).catch((err) => {
             console.log(err)
         })
+=======
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
 
         if (socket != null) {
             console.log("INSIDE SOCKET")
@@ -68,6 +82,7 @@ export default function ChatScreen({ route, navigation }) {
                 console.log("CONNECTED", socket.id)
             })
             socket.on("RECOMMEND_PRODUCT", (res) => {
+<<<<<<< HEAD
 
                 if (res) {
                     axios.get(`${apiBaseUrl}/recommendation/products/latest/${group_id}`, {
@@ -85,6 +100,9 @@ export default function ChatScreen({ route, navigation }) {
                 }
                 // setRecommendedProductsArray((prev) => [res, ...prev])
                 // console.log("RECOMMENDED PRODUCT", res)
+=======
+                console.log("RECOMMENDED PRODUCT", res)
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
             })
             socket.on("GRP_MSG", (msg) => {
 
@@ -722,6 +740,48 @@ export default function ChatScreen({ route, navigation }) {
             {msgLoading ?
                 <View style={{ flex: 1, justifyContent: "center", alignSelf: "center" }}>
 
+<<<<<<< HEAD
+=======
+                                    }}
+                                >
+
+                                </Text>
+                                <Text
+                                    style={{
+                                        color: "#555555",
+                                        fontFamily: "Inter-Bold",
+                                        fontSize: customSize(12)
+                                    }}
+                                    onPress={() => {
+                                        console.log("PRESSED")
+                                        Store.setRecommendationCard(true)
+                                    }}
+                                >
+                                    SHOW
+                                </Text>
+                            </View>
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
+
+                    <ActivityIndicator
+                        color='#1d6ff2'
+                        size={48}
+                        animating={msgLoading}
+                    />
+
+<<<<<<< HEAD
+
+                </View> :
+                <View style={{ flex: 1 }}>
+                    <GiftedChat
+                        messages={messages}
+
+=======
+                        </View>
+                )
+            }</Observer>
+            {msgLoading ?
+                <View style={{ flex: 1, justifyContent: "center", alignSelf: "center" }}>
+
 
                     <ActivityIndicator
                         color='#1d6ff2'
@@ -735,6 +795,7 @@ export default function ChatScreen({ route, navigation }) {
                     <GiftedChat
                         messages={messages}
 
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
                         onSend={messages => onSend(messages, { image: filePath })}
                         // onSend={messages => onSend(messages, { image: filePath })}
 
@@ -752,6 +813,7 @@ export default function ChatScreen({ route, navigation }) {
 
                         }}
                         onPressAvatar={(user) => {
+<<<<<<< HEAD
                             Alert.alert(
                                 "",
                                 `Do you want to chat with ${user.name}`,
@@ -769,6 +831,9 @@ export default function ChatScreen({ route, navigation }) {
                                 ]
                             );
 
+=======
+                            navigation.navigate("FriendChatRoom", { user: user, socket: socket })
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
                         }}
                         // renderSend={renderSend}
                         renderBubble={BubbleChat}
@@ -787,8 +852,13 @@ export default function ChatScreen({ route, navigation }) {
                                     textDecorationLine: "underline",
                                     color:
                                         item && item[0].color === "black"
+<<<<<<< HEAD
                                             ? "#18a0fb"
                                             : "white"
+=======
+                                            ? "red"
+                                            : "blue"
+>>>>>>> a36406d8754f245bc27516358559b23f16847ff4
                                 },
                                 onPress: async (res) => {
                                     console.log("rES", res)

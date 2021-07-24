@@ -18,14 +18,32 @@ const swagger = fs.readFileSync("./api/swagger/swagger.yaml", "utf8");
 const { verifyToken, addChatToDatabase } = require("./api/helpers/socket");
 const db = require("./api/helpers/db");
 
+const morgan = require("morgan");
+
 const app = express();
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {});
 
 const swaggerConfig = yaml.load(swagger);
+const { send200, send400 } = require("./api/helpers/response");
+
+const redis = require("redis");
+const { getDbMongo } = require("./api/helpers/dbMongo");
+const { default: axios } = require("axios");
+const redisClient = redis.createClient({
+  host: "127.0.0.1",
+  port: 6379,
+  password: config.password,
+});
+
+redisClient.on("error", function (error) {
+  console.error(error);
+});
 
 app.use(cors());
 app.use(fileUpload());
+
+app.use(morgan("dev"));
 
 app.get("/", (req, res) => {
   res.sendFile(`index.html`, { root: "./" });
@@ -36,8 +54,61 @@ function getCurrTime(isMongo) {
   else return moment().toDate();
 }
 
+const chatCount = {};
+
+function startTimer() {
+  setInterval(() => {
+    for (let key in chatCount) {
+      if (chatCount[key] > 2) {
+        console.log("Call Some Api ML");
+        console.log(chatCount);
+
+        const url = "http://20.204.120.208/predict";
+        getDbMongo()
+          .collection("group_chats")
+          .find({ group_id: key })
+          .sort({ createdAt: -1 })
+          .limit(chatCount[key])
+          .toArray((err, result) => {
+            if (err) console.log("could not fetch docs from chats");
+            else {
+              chatCount[key] = 0;
+              result = result.map((item) => item.message.text);
+              console.log({ conversarions: result });
+              // axios
+              //   .post(url, { conversations: result })
+              //   .then((resp) => {
+              //     console.log("got data");
+              //   })
+              //   .catch((err) => {
+              //     console.log("--------------------------------");
+              //     console.log(err);
+              //   });
+            }
+          });
+      } else {
+        console.log("Time up message count not met");
+      }
+    }
+  }, 1000 * 30);
+}
+startTimer();
+
 // SOCKET --------------------------------------------------------------------------------------------------------------------
 // START---------------------------------------------------------------------------------------------------------------------
+
+app.post("recommendation/product/carousel", (req, res) => {
+  console.log(req.body);
+  getDbMongo()
+    .collection("recommended_products")
+    .updateOne(req.body, (err, result) => {
+      if (err) send400(req, res, "Coult not");
+      else {
+        io.emit("RECOMMENT_PRODUCT", req.body);
+        send200(req, res, { message: "Recommeneded" });
+      }
+    });
+});
 
 const userSocketMap = {};
 const userRoomMap = {};
@@ -112,7 +183,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("GRP_MSG", (payload, cb) => {
-    console.log("group message");
+    if (payload["group_id"] in chatCount) {
+      chatCount[payload.group_id] = chatCount[payload.group_id] + 1;
+    } else {
+      chatCount[payload.group_id] = 0;
+    }
+
+    console.log(chatCount);
+
     const chat = {
       ...payload,
       from: socket.user.uid,
