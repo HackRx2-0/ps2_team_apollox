@@ -11,6 +11,8 @@ import Store from "./src/Store/Store";
 import { Observer } from "mobx-react";
 import { HomeScreens } from './src/Navigation/HomeNavigator';
 import axios from "axios";
+import io from "socket.io-client";
+
 import { apiBaseUrl } from './src/Config/Config';
 
 
@@ -50,9 +52,32 @@ function App() {
 
       });
     }
+    const TOKEN = Store.authToken
+    const newSocket = io("https://www.api.apollox.atifhossain.me", {
+      auth: {
+        token: `Bearer ${TOKEN}`
+      },
+    });
+    console.log(newSocket)
 
-    return subscriber; // unsubscribe on unmount
+    Store.setSocket(newSocket)
+
+    return () => {
+      subscriber
+      newSocket.close()
+    };
+
+    // unsubscribe on unmount
   }, []);
+
+  //   useEffect(() => {
+
+
+
+  //     return () => { newSocket.close() }
+
+
+  // }, [])
 
   async function getUserDetails() {
     const authTokenServer = await getData('authTokenServer')

@@ -6,13 +6,14 @@ import { CustomInput } from '../../Components/CustomInput';
 import { Join } from '../../Functions/AppFunctions';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Store from '../../Store/Store';
 
 
 function SignupScreen() {
 
     const [disabled, setDisabled] = useState(true);
     const [authState, setAuthState] = useState();
-    const [name, setName] = useState();
+    const [name, setName] = useState(Store.userGoogleName);
     const [field, setField] = useState();
 
 
@@ -40,6 +41,7 @@ function SignupScreen() {
                     <Text style={styles.text1}>
                         Full Name
                     </Text>
+                    {console.log("nameee", Store.userGoogleName)}
                     <CustomInput
                         IconName="user"
                         IconSize={24}
@@ -47,10 +49,12 @@ function SignupScreen() {
                         placeholder={"Your Name"}
                         placeholderTextColor={"#c4c4c4"}
                         feather={true}
+                        value={name}
                         keyboardType={"default"}
                         onChangeText={(res) => {
+                            setName(res)
                             if (res != "") {
-                                setName(res)
+
                                 //Condition for button to set to true
                                 setDisabled(false)
                             } else {

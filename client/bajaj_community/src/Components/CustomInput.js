@@ -13,7 +13,7 @@ import { customSize, height, width } from '../Utils/Utils.js';
 
 
 export function CustomInput(props) {
-    const { IconName, IconSize, IconColor, placeholder, placeholderTextColor, onChangeText, keyboardType, feather } = props;
+    const { IconName, IconSize, IconColor, placeholder, placeholderTextColor, onChangeText, keyboardType, feather, value } = props;
 
     return (
         <View style={{
@@ -50,6 +50,7 @@ export function CustomInput(props) {
                 placeholderTextColor={placeholderTextColor}
                 onChangeText={onChangeText}
                 keyboardType={keyboardType}
+                value={value}
             />
         </View>
     )

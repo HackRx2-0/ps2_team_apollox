@@ -17,16 +17,16 @@ function LoginScreen({ navigation }) {
         >
             <View>
                 <BackgroundImage
-                    imgHeight={height / 1.65}
+                    imgHeight={height / 1.32}
                     marginTop={80}
                 />
             </View>
             <View style={styles.bottomCard}>
                 <View style={{ flex: 1 }}>
                     <Text style={styles.text1}>
-                        Login Using OTP
+                        Login/Signup
                     </Text>
-                    <CustomInput
+                    {/* <CustomInput
                         IconName="phone-alt"
                         IconSize={20}
                         IconColor={"#c4c4c4"}
@@ -67,7 +67,7 @@ function LoginScreen({ navigation }) {
 
                     <Text style={styles.text2}>
                         OR
-                    </Text>
+                    </Text> */}
                     <GoogleSigninButton
                         style={{
                             width: "82%",
@@ -75,7 +75,7 @@ function LoginScreen({ navigation }) {
                             borderRadius: 10,
                             elevation: 0,
                             alignSelf: "center", marginLeft: "0.8%",
-                            marginTop: "2%"
+                            marginTop: "5%"
                         }}
                         size={GoogleSigninButton.Size.Wide}
                         color={GoogleSigninButton.Color.Dark}

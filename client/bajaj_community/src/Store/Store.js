@@ -7,6 +7,11 @@ class Store {
     recommendation_Card = true;
     recommended_Product = "";
 
+    socket = "";
+
+    userGoogleName = "";
+
+
     constructor() {
         makeAutoObservable(this);
     }
@@ -27,6 +32,14 @@ class Store {
     }
     setRecommendedProductVal(val) {
         this.recommended_Product = val;
+    }
+
+    setSocket(val) {
+        this.socket = val;
+    }
+    setUserGoogleName(val) {
+        this.userGoogleName = val
+
     }
 
 }

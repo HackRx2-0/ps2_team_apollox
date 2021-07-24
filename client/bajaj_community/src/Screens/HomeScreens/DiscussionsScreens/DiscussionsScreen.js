@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useEffect, useState, useCallback } from 'react';
 import { Text, View, TouchableOpacity, Image, TextInput, FlatList } from 'react-native';
 import { required } from 'yargs';
@@ -189,21 +188,5 @@ export default function DiscussionsForum({ navigation }) {
             }} /></TouchableOpacity>
 
     </View >
-=======
-import * as React from 'react';
-import { Text, View, Button } from 'react-native';
-
-export default function DiscussionsForum({ navigation }) {
-    return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>Discussiondsdsd!</Text>
-            <Button
-                title="ADD FEED"
-                onPress={() => {
-                    navigation.navigate("AddFeed")
-                }}
-            />
-        </View>
->>>>>>> a36406d8754f245bc27516358559b23f16847ff4
     );
 }

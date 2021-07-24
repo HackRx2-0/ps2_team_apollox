@@ -16,34 +16,35 @@ export default function ChatRoomHome({ navigation }) {
     const [isLoading, setLoading] = useState(true);
     const [isLoadingAllrooms, setLoadingAllRooms] = useState(true);
 
-    const [socket, setSocket] = useState(null)
+    // const [socket, setSocket] = useState(null)
     const [groupID, setGroupID] = useState(null)
     const [groupName, setGroupName] = useState(null)
 
 
 
-    useEffect(() => {
+    // useEffect(() => {
 
+    //    
+    //     const TOKEN = Store.authToken
+    //     const newSocket = io("https://www.api.apollox.atifhossain.me", {
+    //         auth: {
+    //             token: `Bearer ${TOKEN}`
+    //         },
+    //     });
+    //     console.log(newSocket)
+    //     setSocket(newSocket)
+
+
+    //     return () => { newSocket.close() }
+    // }, [])
+
+
+    const socket = Store.socket;
+
+    useEffect(() => {
         LogBox.ignoreLogs([
             'VirtualizedLists should never be nested inside plain ScrollViews with the same orientation because it can break windowing and other functionality - use another VirtualizedList-backed container instead.',
         ]);
-        const TOKEN = Store.authToken
-        const newSocket = io("https://www.api.apollox.atifhossain.me", {
-            auth: {
-                token: `Bearer ${TOKEN}`
-            },
-        });
-        console.log(newSocket)
-        setSocket(newSocket)
-
-
-        return () => { newSocket.close() }
-    }, [])
-
-
-
-
-    useEffect(() => {
         console.log(Store.authToken)
         axios.get(`${apiBaseUrl}/groups/all`, {
             headers: {
@@ -85,7 +86,7 @@ export default function ChatRoomHome({ navigation }) {
         ).then((res) => {
             actionSheetRef.current?.hide();
             console.log("all rooms", res.data)
-            socket.emit("JOIN_ROOM", payload, (res) => {
+            Store.socket.emit("JOIN_ROOM", payload, (res) => {
                 if (res.status == "NOK") {
                     showNotification("Error Try Again")
                     return
@@ -98,7 +99,7 @@ export default function ChatRoomHome({ navigation }) {
 
                     navigation.navigate("ChatRoom", {
                         group_id: id,
-                        socket: socket, name: name
+                        socket: Store.socket, name: name
                     })
                 }
             })
@@ -161,7 +162,8 @@ export default function ChatRoomHome({ navigation }) {
                         group_id: item.uid
                     }
                     console.log(payload)
-                    socket.emit("JOIN_ROOM", payload, (res) => {
+                    // console.log(socket)
+                    Store.socket.emit("JOIN_ROOM", payload, (res) => {
                         console.log("JOIN ROOM", res)
                         //if NOKAY USER IS NOT ADDED IN ROOM
                         if (res.status == "NOK") {
@@ -175,7 +177,7 @@ export default function ChatRoomHome({ navigation }) {
 
                         } else {
 
-                            navigation.navigate("ChatRoom", { group_id: item.uid, socket: socket, name: item.name })
+                            navigation.navigate("ChatRoom", { group_id: item.uid, socket: Store.socket, name: item.name })
                         }
                     })
 
@@ -257,13 +259,13 @@ export default function ChatRoomHome({ navigation }) {
                         group_id: item.group_id
                     }
                     console.log(payload)
-                    socket.emit("JOIN_ROOM", payload, (res) => {
+                    Store.socket.emit("JOIN_ROOM", payload, (res) => {
                         console.log("JOIN ROOM", res)
                         //if NOKAY USER IS NOT ADDED IN ROOM
                         if (res.status == "NOK") {
                             alert("USER NOT IN THIS GROUP")
                         } else {
-                            navigation.navigate("ChatRoom", { group_id: item.group_id, socket: socket, name: item.name })
+                            navigation.navigate("ChatRoom", { group_id: item.group_id, socket: Store.socket, name: item.name })
                         }
                     })
 

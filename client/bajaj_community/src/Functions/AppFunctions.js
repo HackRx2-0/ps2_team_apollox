@@ -14,6 +14,7 @@ export async function SendOtp(phoneNumber) {
     console.log("OTP SENDING")
     const confirmation = await auth().signInWithPhoneNumber(`+91${phoneNumber}`);
     confirmationData = confirmation;
+    console.log("confirmDATA", confirmation)
     return confirmation;
 }
 export async function confirmCode(code) {
@@ -77,7 +78,8 @@ export async function onGoogleButtonPress() {
     //return auth().signInWithCredential(googleCredential);
 
     const status = await auth().signInWithCredential(googleCredential)
-    console.log("GOOGLE FUN", status)
+    console.log("GOOGLE FUN", status.additionalUserInfo.profile.given_name)
+    Store.setUserGoogleName(status.additionalUserInfo.profile.given_name)
     if (status) {
         // storeData("authState", "2")
         // Store.setAuthStateVal("2")
